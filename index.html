@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trade Data Generator</title>
+  
+  <!-- Tailwind CSS Compiler -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- html-to-image Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
+
+  <!-- External Font Request -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+</head>
+<body class="bg-gray-900 text-white min-h-screen p-8 flex flex-col md:flex-row gap-12 items-center justify-center font-sans">
+
+  <!-- Data Input Form -->
+  <div class="bg-gray-800 p-6 rounded-xl w-full max-w-md flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
+    <h2 class="text-xl font-bold mb-2">Input Trade Data</h2>
+    
+    <!-- Date & Time Inputs -->
+    <div class="flex flex-col gap-4 p-3 bg-gray-900/50 rounded-lg border border-gray-700">
+      <label class="flex flex-col text-sm text-gray-400">
+        Trade Date (Past 7 Days Max)
+        <input type="date" id="in-date" value="2026-08-04" class="mt-1 p-2 bg-gray-700 text-white rounded outline-none focus:ring-2 focus:ring-blue-500">
+      </label>
+      
+      <div class="flex gap-4">
+        <label class="flex flex-col text-sm text-gray-400 w-1/2">
+          Entry Time (Local)
+          <input type="time" id="in-entry-time" value="20:00" class="mt-1 p-2 bg-gray-700 text-white rounded outline-none focus:ring-2 focus:ring-blue-500">
+        </label>
+        <label class="flex flex-col text-sm text-gray-400 w-1/2">
+          Exit Time (Local)
+          <input type="time" id="in-exit-time" value="20:45" class="mt-1 p-2 bg-gray-700 text-white rounded outline-none focus:ring-2 focus:ring-blue-500">
+        </label>
+      </div>
+    </div>
+
+    <label class="flex flex-col text-sm text-gray-400">
+      Ticker
+      <input type="text" id="in-ticker" value="NQ1!" class="mt-1 p-2 bg-gray-700 text-white rounded outline-none focus:ring-2 focus:ring-blue-500">
+    </label>
+
+    <label class="flex flex-col text-sm text-gray-400">
+      Short PnL (e.g. +$12.4k)
+      <input type="text" id="in-short-pnl" value="+$12.4k" class="mt-1 p-2 bg-gray-700 text-white rounded outline-none focus:ring-2 focus:ring-blue-500">
+    </label>
+
+    <label class="flex flex-col text-sm text-gray-400">
+      Contracts
+      <input type="number" id="in-contracts" value="3" class="mt-1 p-2 bg-gray-700 text-white rounded outline-none focus:ring-2 focus:ring-blue-500">
+    </label>
+
+    <label class="flex flex-col text-sm text-gray-400">
+      Entry Price
+      <input type="text" id="in-entry" value="$28,698.50" class="mt-1 p-2 bg-gray-700 text-white rounded outline-none focus:ring-2 focus:ring-blue-500">
+    </label>
+
+    <label class="flex flex-col text-sm text-gray-400">
+      Exit Price
+      <input type="text" id="in-exit" value="$29,912.25" class="mt-1 p-2 bg-gray-700 text-white rounded outline-none focus:ring-2 focus:ring-blue-500">
+    </label>
+
+    <label class="flex flex-col text-sm text-gray-400">
+      Total PnL
+      <input type="text" id="in-total-pnl" value="$12,438.50" class="mt-1 p-2 bg-gray-700 text-white rounded outline-none focus:ring-2 focus:ring-blue-500">
+    </label>
+
+    <button onclick="downloadImage()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg w-full">
+      Download Image
+    </button>
+  </div>
+
+  <!-- Real-Time DOM Preview -->
+  <div id="capture-area" class="relative w-[360px] h-[640px] bg-black bg-cover bg-center overflow-hidden tracking-[-0.04em]" 
+       style="background-image: url('https://cdn.discordapp.com/attachments/1516415038011740330/1534235307027857419/c5d07874-8954-4a92-aece-5191dde2549a.jpg?ex=6a736379&is=6a7211f9&hm=f053bdaddb97c32b672080b79bc4917bf5c8bf77cacc5956f9d6662927f4072e&'); font-family: 'Inter', sans-serif;">
+    
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap');
+    </style>
+
+    <div class="relative z-10 flex flex-col h-full pointer-events-none">
+      
+      <!-- Top Text Row -->
+      <div class="flex justify-start items-center text-white text-[22px] px-6 pt-6 leading-none relative z-10">
+        <span class="font-bold">CELESTO</span>
+        <span class="mx-2 text-gray-200 font-medium pb-1">×</span>
+        <span class="font-medium">JENZ</span>
+      </div>
+
+      <!-- SVG Price Chart Overlay (Sits behind text) -->
+      <div class="absolute top-[80px] left-0 w-full h-[320px] pointer-events-none z-0">
+        <svg id="price-chart" class="w-full h-full overflow-visible" preserveAspectRatio="none"></svg>
+        
+        <!-- S & B Markers -->
+        <div id="marker-s" class="absolute hidden flex items-center justify-center w-[16px] h-[16px] bg-[#ff6b6b] text-black text-[9px] font-extrabold rounded-[3px] shadow-sm transform -translate-x-1/2 -translate-y-full mb-[2px]">S</div>
+        <div id="marker-b" class="absolute hidden flex items-center justify-center w-[16px] h-[16px] bg-[#86D99F] text-black text-[9px] font-extrabold rounded-[3px] shadow-sm transform -translate-x-1/2 mt-[2px]">B</div>
+      </div>
+
+      <!-- Variable Output Block -->
+      <div class="mt-auto px-6 mb-4 w-full relative z-10">
+        
+        <!-- Ticker Output -->
+        <div class="flex items-center gap-3 mb-2">
+          <div class="w-10 h-10 rounded-full bg-[#009ee3] flex items-center justify-center text-white font-bold text-[13px] tracking-normal leading-none">
+            100
+          </div>
+          <div class="text-[28px] text-white font-medium leading-none" id="out-ticker">NQ1!</div>
+        </div>
+
+        <!-- Profit Pill Output -->
+        <div class="mt-5 bg-[#86D99F] text-black text-[42px] leading-none font-extrabold py-2 px-2 rounded-xl inline-flex items-center justify-center mb-8" id="out-short-pnl">
+          +$12.4k
+        </div>
+
+        <!-- Trade Variables -->
+        <div class="space-y-[18px] text-[19px] leading-none">
+          <div class="flex justify-between items-center w-full">
+            <span class="text-gray-300 font-bold">Contracts</span>
+            <span class="text-white font-bold text-right" id="out-contracts">3</span>
+          </div>
+          <div class="flex justify-between items-center w-full">
+            <span class="text-gray-300 font-bold">Entry Price</span>
+            <span class="text-white font-bold text-right" id="out-entry">$28,698.50</span>
+          </div>
+          <div class="flex justify-between items-center w-full">
+            <span class="text-gray-300 font-bold">Exit Price</span>
+            <span class="text-white font-bold text-right" id="out-exit">$29,912.25</span>
+          </div>
+          <div class="flex justify-between items-center w-full pt-4">
+            <span class="text-gray-300 font-bold">Total PnL</span>
+            <span class="text-[#86D99F] font-bold text-right" id="out-total-pnl">$12,438.50</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Text Row -->
+      <div class="flex justify-between items-center text-white text-[14px] leading-none mt-auto pb-6 px-6 font-semibold relative z-10">
+        <span>celesto.github.io</span>
+        <span>@jenztornado</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Standard Text Bindings
+    const dataNodes = ['ticker', 'short-pnl', 'contracts', 'entry', 'exit', 'total-pnl'];
+    dataNodes.forEach(nodeId => {
+      const inputElement = document.getElementById(`in-${nodeId}`);
+      const outputElement = document.getElementById(`out-${nodeId}`);
+      inputElement.addEventListener('input', (event) => {
+        outputElement.textContent = event.target.value;
+      });
+    });
+
+    // TIME-BASED MARKET DATA MATCHER
+    async function fetchAndRenderRealChart() {
+      const svg = document.getElementById('price-chart');
+      const markerS = document.getElementById('marker-s');
+      const markerB = document.getElementById('marker-b');
+      
+      const symbol = "NQ=F"; 
+      // Fetch 7 days of 1m data to ensure we have historical access for the selected day
+      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1m&range=7d`;
+      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+
+      try {
+        const response = await fetch(proxyUrl);
+        const data = await response.json();
+        
+        const rawTimestamps = data.chart.result[0].timestamp;
+        const rawPrices = data.chart.result[0].indicators.quote[0].close;
+        
+        // Get user date and times
+        const dateVal = document.getElementById('in-date').value;
+        const entryTimeVal = document.getElementById('in-entry-time').value;
+        const exitTimeVal = document.getElementById('in-exit-time').value;
+
+        if(!dateVal || !entryTimeVal || !exitTimeVal) return;
+
+        // Convert user inputs to local Unix Timestamps (Seconds)
+        const startOfDayUnix = Math.floor(new Date(`${dateVal}T00:00:00`).getTime() / 1000);
+        const endOfDayUnix = Math.floor(new Date(`${dateVal}T23:59:59`).getTime() / 1000);
+        const entryUnix = Math.floor(new Date(`${dateVal}T${entryTimeVal}:00`).getTime() / 1000);
+        const exitUnix = Math.floor(new Date(`${dateVal}T${exitTimeVal}:00`).getTime() / 1000);
+
+        // Filter API data to ONLY include the specific day the user selected
+        let dayTimestamps = [];
+        let priceData = [];
+        for (let i = 0; i < rawTimestamps.length; i++) {
+          if (rawTimestamps[i] >= startOfDayUnix && rawTimestamps[i] <= endOfDayUnix && rawPrices[i] !== null) {
+            dayTimestamps.push(rawTimestamps[i]);
+            priceData.push(rawPrices[i]);
+          }
+        }
+
+        if(priceData.length === 0) {
+          console.warn("No market data found for this date. It may be a weekend or too far in the past.");
+          svg.innerHTML = '';
+          markerS.classList.add('hidden');
+          markerB.classList.add('hidden');
+          return;
+        }
+
+        const minPrice = Math.min(...priceData);
+        const maxPrice = Math.max(...priceData);
+        const range = maxPrice - minPrice;
+        
+        const width = svg.clientWidth || 360;
+        const height = svg.clientHeight || 320;
+
+        // Find the closest timestamp index for Entry and Exit
+        let entryIndex = 0;
+        let exitIndex = priceData.length - 1;
+        let minEntryDiff = Infinity;
+        let minExitDiff = Infinity;
+
+        dayTimestamps.forEach((ts, i) => {
+          if (Math.abs(ts - entryUnix) < minEntryDiff) {
+            minEntryDiff = Math.abs(ts - entryUnix);
+            entryIndex = i;
+          }
+          if (Math.abs(ts - exitUnix) < minExitDiff) {
+            minExitDiff = Math.abs(ts - exitUnix);
+            exitIndex = i;
+          }
+        });
+
+        // Ensure proper chronological rendering
+        if (entryIndex > exitIndex) {
+            const temp = entryIndex;
+            entryIndex = exitIndex;
+            exitIndex = temp;
+        }
+
+        let pathString = '';
+        let entryCoords = { x: 0, y: 0 };
+        let exitCoords = { x: 0, y: 0 };
+
+        priceData.forEach((price, index) => {
+          const x = (index / (priceData.length - 1)) * width;
+          const y = height - (((price - minPrice) / range) * height); 
+
+          if (index === 0) {
+            pathString += `M ${x} ${y} `;
+          } else {
+            pathString += `L ${x} ${y} `;
+          }
+
+          if (index === entryIndex) entryCoords = { x, y };
+          if (index === exitIndex) exitCoords = { x, y };
+        });
+
+        svg.innerHTML = `<path d="${pathString}" fill="none" stroke="rgba(255, 255, 255, 0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />`;
+
+        markerS.style.left = `${entryCoords.x}px`; 
+        markerS.style.top = `${entryCoords.y}px`;
+        markerS.classList.remove('hidden');
+
+        markerB.style.left = `${exitCoords.x}px`;
+        markerB.style.top = `${exitCoords.y}px`;
+        markerB.classList.remove('hidden');
+
+      } catch (error) {
+        console.error("Failed to load real market data:", error);
+      }
+    }
+
+    // Event Listeners for Date/Time changes to redraw the chart instantly
+    window.addEventListener('DOMContentLoaded', fetchAndRenderRealChart);
+    document.getElementById('in-date').addEventListener('input', fetchAndRenderRealChart);
+    document.getElementById('in-entry-time').addEventListener('input', fetchAndRenderRealChart);
+    document.getElementById('in-exit-time').addEventListener('input', fetchAndRenderRealChart);
+
+    function downloadImage() {
+      const targetDOM = document.getElementById('capture-area');
+      
+      document.fonts.ready.then(() => {
+        htmlToImage.toPng(targetDOM, { pixelRatio: 3, useCORS: true })
+          .then(() => {
+            return htmlToImage.toPng(targetDOM, { pixelRatio: 3, useCORS: true });
+          })
+          .then(function (dataUrl) {
+            const fileLink = document.createElement('a');
+            fileLink.download = 'trade-data.png';
+            fileLink.href = dataUrl;
+            fileLink.click();
+          })
+          .catch(function (error) {
+            console.error('Render error:', error);
+            alert('Generation failed. Ensure background image URL is valid.');
+          });
+      });
+    }
+  </script>
+</body>
+</html>
