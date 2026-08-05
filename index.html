@@ -82,7 +82,7 @@
       <p class="text-xs text-zinc-400 mt-1">Configure your visual trade summary.</p>
     </div>
 
-    <!-- 0. Tradovate CSV Import (NEW) -->
+    <!-- 0. Tradovate CSV Import -->
     <div class="space-y-2 pb-4 border-b border-zinc-800">
       <span class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Automate</span>
       <label class="flex items-center justify-center w-full p-3 bg-zinc-800/40 border border-zinc-700 rounded-lg text-sm text-zinc-300 hover:text-white hover:bg-zinc-700 cursor-pointer transition-colors">
@@ -231,6 +231,7 @@
   <div id="capture-area" class="relative w-[360px] h-[640px] bg-black bg-cover bg-center overflow-hidden tracking-[-0.04em]" style="background-image: none;">
     <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');</style>
     
+    <!-- Dimmer Overlay (Z-0) -->
     <div id="bg-overlay" class="absolute inset-0 bg-black pointer-events-none z-0" style="opacity: 0;"></div>
 
     <div class="relative z-20 flex flex-col h-full pointer-events-none">
@@ -295,8 +296,7 @@
   <script>
     const captureArea = document.getElementById('capture-area');
 
-    // --- 0. TRADOVATE CSV PARSER (NEW) ---
-    // Safely parse CSV lines, keeping commas inside quotes together
+    // --- 0. TRADOVATE CSV PARSER (Self-Healing Update) ---
     function csvToArray(text) {
       let p = '', row = [''], ret = [row], i = 0, r = 0, s = !0, l;
       for (l of text) {
@@ -310,18 +310,15 @@
         } else row[i] += l;
         p = l;
       }
-      return ret.filter(r => r.length > 1); // Remove empty trailing rows
+      return ret.filter(r => r.length > 1);
     }
 
-    // Format currency to strings like +$1,200.50 and +$1.2k
     function formatCurrencyStrings(amount) {
       const isPositive = amount >= 0;
       const sign = isPositive ? '+$' : '-$';
       const absVal = Math.abs(amount);
-      
       const totalStr = sign + absVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
       const shortStr = sign + (absVal >= 1000 ? (absVal / 1000).toFixed(1) + 'k' : absVal.toFixed(2));
-      
       return { totalStr, shortStr };
     }
 
@@ -335,11 +332,9 @@
           const rows = csvToArray(event.target.result);
           if (rows.length < 2) throw new Error("CSV is empty or invalid.");
 
-          // Clean headers to lowercase for flexible matching
           const headers = rows[0].map(h => h.trim().toLowerCase());
           const findCol = (keywords) => headers.findIndex(h => keywords.some(k => h.includes(k)));
 
-          // Dynamically map Tradovate columns by keyword
           const idxSymbol = findCol(['symbol', 'contract', 'product', 'ticker']);
           const idxQty = findCol(['qty', 'quantity', 'size', 'contracts']);
           const idxEntryPrice = findCol(['entry price', 'open price', 'avg entry', 'buy price']);
@@ -348,32 +343,32 @@
           const idxExitTime = findCol(['exit time', 'close time', 'date out']);
           const idxPnl = findCol(['p&l', 'pnl', 'profit', 'net']);
 
-          // Target the first actual data row (most recent trade usually row 1)
           const data = rows[1]; 
 
-          // Update Ticker & Qty
           if(idxSymbol !== -1 && data[idxSymbol]) document.getElementById('in-ticker').value = data[idxSymbol].trim();
           if(idxQty !== -1 && data[idxQty]) document.getElementById('in-contracts').value = data[idxQty].trim();
-
-          // Update Prices
           if(idxEntryPrice !== -1 && data[idxEntryPrice]) document.getElementById('in-entry').value = "$" + parseFloat(data[idxEntryPrice]).toFixed(2);
           if(idxExitPrice !== -1 && data[idxExitPrice]) document.getElementById('in-exit').value = "$" + parseFloat(data[idxExitPrice]).toFixed(2);
 
-          // Update PnL
+          // Update PnL - With Failsafe for unquoted missing commas
           if(idxPnl !== -1 && data[idxPnl]) {
-            const rawPnl = parseFloat(data[idxPnl].replace(/[^0-9.-]+/g, ""));
+            let pnlString = data[idxPnl];
+            
+            // SELF-HEALING CSV PATCH: Stitches broken money formats back together
+            if (data.length > headers.length && data[idxPnl + 1] && /^[0-9]+/.test(data[idxPnl + 1].trim())) {
+              pnlString += data[idxPnl + 1];
+            }
+
+            const rawPnl = parseFloat(pnlString.replace(/[^0-9.-]+/g, ""));
             const { totalStr, shortStr } = formatCurrencyStrings(rawPnl);
             document.getElementById('in-total-pnl').value = totalStr;
             document.getElementById('in-short-pnl').value = shortStr;
           }
 
-          // Update Dates and Times
           if(idxEntryTime !== -1 && data[idxEntryTime]) {
             const dateObj = new Date(data[idxEntryTime]);
             if(!isNaN(dateObj)) {
-              // YYYY-MM-DD format for Date input
               document.getElementById('in-date').value = dateObj.getFullYear() + "-" + String(dateObj.getMonth() + 1).padStart(2, '0') + "-" + String(dateObj.getDate()).padStart(2, '0');
-              // HH:MM format for Time input
               document.getElementById('in-entry-time').value = dateObj.toTimeString().slice(0,5);
             }
           }
@@ -385,15 +380,13 @@
             }
           }
 
-          // Dispatch events to instantly update UI and Redraw Chart
           document.querySelectorAll('input').forEach(input => input.dispatchEvent(new Event('input')));
           fetchAndRenderRealChart();
           
           alert("Trade successfully imported from CSV!");
-
         } catch (error) {
           console.error("CSV Parse Error:", error);
-          alert("Failed to parse CSV. Ensure it is a valid Tradovate export file.");
+          alert("Failed to parse CSV. Ensure it is a valid export file.");
         }
       };
       reader.readAsText(file);
