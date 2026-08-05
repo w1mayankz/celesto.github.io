@@ -17,7 +17,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <style>
-    /* Global Inter Font & Custom Scrollbar for minimal aesthetic */
     body { font-family: 'Inter', sans-serif; }
     
     ::-webkit-scrollbar { width: 6px; }
@@ -25,7 +24,6 @@
     ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 10px; }
     ::-webkit-scrollbar-thumb:hover { background: #52525b; }
 
-    /* Modernize color picker inputs */
     input[type="color"] {
       -webkit-appearance: none;
       border: 1px solid #333;
@@ -39,9 +37,27 @@
     }
     input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
     input[type="color"]::-webkit-color-swatch { border: none; border-radius: 5px;}
+    
+    /* Style for modern checkboxes */
+    input[type="checkbox"] {
+      accent-color: #ffffff;
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body class="bg-[#09090b] text-white min-h-screen p-8 flex flex-col md:flex-row gap-12 items-center justify-center">
+
+  <!-- Datalist for preset color swatches in the color picker -->
+  <datalist id="preset-colors">
+    <option value="#ffffff">White</option>
+    <option value="#86D99F">Default Green</option>
+    <option value="#ff6b6b">Red</option>
+    <option value="#009ee3">Ticker Blue</option>
+    <option value="#d4d4d8">Zinc Gray</option>
+    <option value="#000000">Black</option>
+  </datalist>
 
   <!-- Minimalist Data Input Form -->
   <div class="bg-[#18181b] border border-[#27272a] p-6 rounded-2xl w-full max-w-[420px] flex flex-col gap-5 max-h-[90vh] overflow-y-auto shadow-2xl">
@@ -54,9 +70,7 @@
     <!-- 1. Background Image Selector -->
     <div class="space-y-2">
       <span class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Background</span>
-      <div class="grid grid-cols-5 gap-2" id="bg-selector">
-        <!-- JS will populate thumbnails 1.jpeg to 10.jpeg here -->
-      </div>
+      <div class="grid grid-cols-5 gap-2" id="bg-selector"></div>
     </div>
 
     <!-- 2. Profile Details -->
@@ -117,38 +131,50 @@
       </label>
     </div>
 
-    <!-- 5. Color Customization -->
-    <div class="space-y-3 pt-2 border-t border-zinc-800">
+    <!-- 5. Visibility Toggles (NEW) -->
+    <div class="space-y-3 pt-4 border-t border-zinc-800">
+      <span class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Visibility Controls</span>
+      <div class="grid grid-cols-2 gap-y-2 gap-x-4">
+        <label class="flex items-center gap-2 text-sm text-zinc-400"><input type="checkbox" id="chk-brand" checked> CELESTO</label>
+        <label class="flex items-center gap-2 text-sm text-zinc-400"><input type="checkbox" id="chk-separator" checked> "×" Separator</label>
+        <label class="flex items-center gap-2 text-sm text-zinc-400"><input type="checkbox" id="chk-name" checked> Name</label>
+        <label class="flex items-center gap-2 text-sm text-zinc-400"><input type="checkbox" id="chk-chart" checked> Line Chart & Tags</label>
+        <label class="flex items-center gap-2 text-sm text-zinc-400"><input type="checkbox" id="chk-badge" checked> Ticker Badge (100)</label>
+        <label class="flex items-center gap-2 text-sm text-zinc-400"><input type="checkbox" id="chk-ticker" checked> Ticker Text</label>
+        <label class="flex items-center gap-2 text-sm text-zinc-400"><input type="checkbox" id="chk-pnl-box" checked> PnL Box</label>
+        <label class="flex items-center gap-2 text-sm text-zinc-400"><input type="checkbox" id="chk-contracts" checked> Contracts Row</label>
+        <label class="flex items-center gap-2 text-sm text-zinc-400"><input type="checkbox" id="chk-entry" checked> Entry Row</label>
+        <label class="flex items-center gap-2 text-sm text-zinc-400"><input type="checkbox" id="chk-exit" checked> Exit Row</label>
+        <label class="flex items-center gap-2 text-sm text-zinc-400"><input type="checkbox" id="chk-total" checked> Total PnL Row</label>
+        <label class="flex items-center gap-2 text-sm text-zinc-400"><input type="checkbox" id="chk-website" checked> Website Link</label>
+        <label class="flex items-center gap-2 text-sm text-zinc-400"><input type="checkbox" id="chk-handle" checked> Handle Link</label>
+      </div>
+    </div>
+
+    <!-- 6. Color Customization (Updated with Datalist support) -->
+    <div class="space-y-3 pt-4 border-t border-zinc-800">
       <span class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Colors</span>
-      
       <div class="grid grid-cols-2 gap-y-3 gap-x-4">
         <label class="flex items-center justify-between text-sm text-zinc-400">
-          Top Text
-          <input type="color" id="color-top" value="#ffffff">
+          Top Text <input type="color" id="color-top" value="#ffffff" list="preset-colors">
         </label>
         <label class="flex items-center justify-between text-sm text-zinc-400">
-          Ticker Name
-          <input type="color" id="color-ticker" value="#ffffff">
+          Ticker Name <input type="color" id="color-ticker" value="#ffffff" list="preset-colors">
         </label>
         <label class="flex items-center justify-between text-sm text-zinc-400">
-          PnL Box BG
-          <input type="color" id="color-pnl-bg" value="#86D99F">
+          PnL Box BG <input type="color" id="color-pnl-bg" value="#86D99F" list="preset-colors">
         </label>
         <label class="flex items-center justify-between text-sm text-zinc-400">
-          PnL Box Text
-          <input type="color" id="color-pnl-text" value="#000000">
+          PnL Box Text <input type="color" id="color-pnl-text" value="#000000" list="preset-colors">
         </label>
         <label class="flex items-center justify-between text-sm text-zinc-400">
-          Stats Labels
-          <input type="color" id="color-labels" value="#d4d4d8">
+          Stats Labels <input type="color" id="color-labels" value="#d4d4d8" list="preset-colors">
         </label>
         <label class="flex items-center justify-between text-sm text-zinc-400">
-          Total PnL
-          <input type="color" id="color-total" value="#86D99F">
+          Total PnL <input type="color" id="color-total" value="#86D99F" list="preset-colors">
         </label>
         <label class="flex items-center justify-between text-sm text-zinc-400">
-          Bottom Text
-          <input type="color" id="color-bottom" value="#ffffff">
+          Bottom Text <input type="color" id="color-bottom" value="#ffffff" list="preset-colors">
         </label>
       </div>
     </div>
@@ -159,23 +185,21 @@
   </div>
 
   <!-- Real-Time DOM Preview -->
-  <!-- Background starts explicitly black until image selected -->
   <div id="capture-area" class="relative w-[360px] h-[640px] bg-black bg-cover bg-center overflow-hidden tracking-[-0.04em]" style="background-image: none;">
-    
+    <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');</style>
+
     <div class="relative z-10 flex flex-col h-full pointer-events-none">
       
       <!-- Top Text Row -->
       <div class="flex justify-start items-center text-[22px] px-6 pt-6 leading-none relative z-10" id="out-top-row" style="color: #ffffff;">
-        <span class="font-bold">CELESTO</span>
-        <span class="mx-2 font-medium pb-1 opacity-75">×</span>
+        <span class="font-bold" id="out-brand">CELESTO</span>
+        <span class="mx-2 font-medium pb-1 opacity-75" id="out-separator">×</span>
         <span class="font-medium" id="out-name">JENZ</span>
       </div>
 
-      <!-- SVG Price Chart Overlay (Sits behind text) -->
-      <div class="absolute top-[80px] left-0 w-full h-[320px] pointer-events-none z-0">
+      <!-- SVG Price Chart Overlay -->
+      <div id="out-chart-container" class="absolute top-[80px] left-0 w-full h-[320px] pointer-events-none z-0">
         <svg id="price-chart" class="w-full h-full overflow-visible" preserveAspectRatio="none"></svg>
-        
-        <!-- S & B Markers -->
         <div id="marker-s" class="absolute hidden flex items-center justify-center w-[16px] h-[16px] bg-[#ff6b6b] text-black text-[9px] font-extrabold rounded-[3px] shadow-sm transform -translate-x-1/2 -translate-y-full mb-[2px]">S</div>
         <div id="marker-b" class="absolute hidden flex items-center justify-center w-[16px] h-[16px] bg-[#86D99F] text-black text-[9px] font-extrabold rounded-[3px] shadow-sm transform -translate-x-1/2 mt-[2px]">B</div>
       </div>
@@ -184,10 +208,8 @@
       <div class="mt-auto px-6 mb-4 w-full relative z-10">
         
         <!-- Ticker Output -->
-        <div class="flex items-center gap-3 mb-2">
-          <div class="w-10 h-10 rounded-full bg-[#009ee3] flex items-center justify-center text-white font-bold text-[13px] tracking-normal leading-none">
-            100
-          </div>
+        <div class="flex items-center gap-3 mb-2" id="out-ticker-container">
+          <div id="out-ticker-badge" class="w-8 h-8 rounded-full bg-[#009ee3] flex items-center justify-center text-white font-bold text-[13px] tracking-normal leading-none">100</div>
           <div class="text-[28px] font-medium leading-none" id="out-ticker" style="color: #ffffff;">NQ1!</div>
         </div>
 
@@ -199,19 +221,19 @@
 
         <!-- Trade Variables -->
         <div class="space-y-[18px] text-[19px] leading-none">
-          <div class="flex justify-between items-center w-full">
+          <div class="flex justify-between items-center w-full" id="out-row-contracts">
             <span class="font-bold out-label" style="color: #d4d4d8;">Contracts</span>
             <span class="text-white font-bold text-right" id="out-contracts">3</span>
           </div>
-          <div class="flex justify-between items-center w-full">
+          <div class="flex justify-between items-center w-full" id="out-row-entry">
             <span class="font-bold out-label" style="color: #d4d4d8;">Entry Price</span>
             <span class="text-white font-bold text-right" id="out-entry">$28,698.50</span>
           </div>
-          <div class="flex justify-between items-center w-full">
+          <div class="flex justify-between items-center w-full" id="out-row-exit">
             <span class="font-bold out-label" style="color: #d4d4d8;">Exit Price</span>
             <span class="text-white font-bold text-right" id="out-exit">$29,912.25</span>
           </div>
-          <div class="flex justify-between items-center w-full pt-4">
+          <div class="flex justify-between items-center w-full pt-4" id="out-row-total-pnl">
             <span class="font-bold out-label" style="color: #d4d4d8;">Total PnL</span>
             <span class="font-bold text-right" id="out-total-pnl" style="color: #86D99F;">$12,438.50</span>
           </div>
@@ -220,7 +242,7 @@
 
       <!-- Bottom Text Row -->
       <div class="flex justify-between items-center text-[14px] leading-none mt-auto pb-6 px-6 font-semibold relative z-10" id="out-bottom-row" style="color: #ffffff;">
-        <span>celesto.github.io</span>
+        <span id="out-website">celesto.github.io</span>
         <span id="out-handle">@jenztornado</span>
       </div>
     </div>
@@ -230,25 +252,21 @@
     // --- 1. POPULATE BACKGROUND IMAGE SELECTOR ---
     const bgContainer = document.getElementById('bg-selector');
     const captureArea = document.getElementById('capture-area');
-    let selectedBgIndex = null;
 
     for(let i = 1; i <= 10; i++) {
       const btn = document.createElement('button');
       btn.className = "w-full aspect-square bg-zinc-800 rounded-md overflow-hidden border-2 border-transparent hover:border-zinc-500 transition-all bg-cover bg-center";
       btn.style.backgroundImage = `url('assets/${i}.jpeg')`;
       btn.onclick = () => {
-        // Remove active state from all
         Array.from(bgContainer.children).forEach(child => child.classList.replace('border-white', 'border-transparent'));
-        // Add active state to clicked
         btn.classList.replace('border-transparent', 'border-white');
-        // Update Preview
         captureArea.style.backgroundImage = `url('assets/${i}.jpeg')`;
       };
       bgContainer.appendChild(btn);
     }
 
     // --- 2. TEXT BINDINGS ---
-    const dataNodes = [
+    const textDataNodes = [
       { in: 'in-name', out: 'out-name' },
       { in: 'in-handle', out: 'out-handle' },
       { in: 'in-ticker', out: 'out-ticker' },
@@ -258,8 +276,7 @@
       { in: 'in-exit', out: 'out-exit' },
       { in: 'in-total-pnl', out: 'out-total-pnl' }
     ];
-    
-    dataNodes.forEach(node => {
+    textDataNodes.forEach(node => {
       document.getElementById(node.in).addEventListener('input', (e) => {
         document.getElementById(node.out).textContent = e.target.value;
       });
@@ -274,104 +291,86 @@
       { input: 'color-total', targetId: 'out-total-pnl', prop: 'color' },
       { input: 'color-bottom', targetId: 'out-bottom-row', prop: 'color' }
     ];
-
-    // Map Single ID Colors
     colorMaps.forEach(map => {
       document.getElementById(map.input).addEventListener('input', (e) => {
         document.getElementById(map.targetId).style[map.prop] = e.target.value;
       });
     });
-
-    // Map Multi-class Colors (Labels)
     document.getElementById('color-labels').addEventListener('input', (e) => {
-      document.querySelectorAll('.out-label').forEach(el => {
-        el.style.color = e.target.value;
+      document.querySelectorAll('.out-label').forEach(el => el.style.color = e.target.value);
+    });
+
+    // --- 4. VISIBILITY BINDINGS ---
+    const visibilityNodes = [
+      { check: 'chk-brand', target: 'out-brand' },
+      { check: 'chk-separator', target: 'out-separator' },
+      { check: 'chk-name', target: 'out-name' },
+      { check: 'chk-chart', target: 'out-chart-container' },
+      { check: 'chk-badge', target: 'out-ticker-badge' },
+      { check: 'chk-ticker', target: 'out-ticker' },
+      { check: 'chk-pnl-box', target: 'out-short-pnl' },
+      { check: 'chk-contracts', target: 'out-row-contracts' },
+      { check: 'chk-entry', target: 'out-row-entry' },
+      { check: 'chk-exit', target: 'out-row-exit' },
+      { check: 'chk-total', target: 'out-row-total-pnl' },
+      { check: 'chk-website', target: 'out-website' },
+      { check: 'chk-handle', target: 'out-handle' }
+    ];
+    visibilityNodes.forEach(node => {
+      document.getElementById(node.check).addEventListener('change', (e) => {
+        document.getElementById(node.target).style.display = e.target.checked ? '' : 'none';
       });
     });
 
-
-    // --- 4. CHART & API LOGIC (Unchanged Structural Integrity) ---
-    function parsePriceString(priceStr) {
-      return parseFloat(priceStr.replace(/[^0-9.-]+/g, ""));
-    }
+    // --- 5. CHART & API LOGIC ---
+    function parsePriceString(priceStr) { return parseFloat(priceStr.replace(/[^0-9.-]+/g, "")); }
 
     function drawSVGPath(svg, markerS, markerB, priceData, timestamps, isFallback = false) {
       const minPrice = Math.min(...priceData);
       const maxPrice = Math.max(...priceData);
       const range = maxPrice - minPrice || 1;
-      
       const width = svg.clientWidth || 360;
       const height = svg.clientHeight || 320;
 
-      let entryIndex = 0;
-      let exitIndex = priceData.length - 1;
+      let entryIndex = 0, exitIndex = priceData.length - 1;
 
       if (!isFallback && timestamps && timestamps.length > 0) {
         const dateVal = document.getElementById('in-date').value;
         const entryTimeVal = document.getElementById('in-entry-time').value;
         const exitTimeVal = document.getElementById('in-exit-time').value;
-        
         const entryUnix = Math.floor(new Date(`${dateVal}T${entryTimeVal}:00`).getTime() / 1000);
         const exitUnix = Math.floor(new Date(`${dateVal}T${exitTimeVal}:00`).getTime() / 1000);
 
-        let minEntryDiff = Infinity;
-        let minExitDiff = Infinity;
-
+        let minEntryDiff = Infinity, minExitDiff = Infinity;
         timestamps.forEach((ts, i) => {
-          if (Math.abs(ts - entryUnix) < minEntryDiff) {
-            minEntryDiff = Math.abs(ts - entryUnix);
-            entryIndex = i;
-          }
-          if (Math.abs(ts - exitUnix) < minExitDiff) {
-            minExitDiff = Math.abs(ts - exitUnix);
-            exitIndex = i;
-          }
+          if (Math.abs(ts - entryUnix) < minEntryDiff) { minEntryDiff = Math.abs(ts - entryUnix); entryIndex = i; }
+          if (Math.abs(ts - exitUnix) < minExitDiff) { minExitDiff = Math.abs(ts - exitUnix); exitIndex = i; }
         });
-
-        if (entryIndex > exitIndex) {
-            const temp = entryIndex;
-            entryIndex = exitIndex;
-            exitIndex = temp;
-        }
+        if (entryIndex > exitIndex) { const temp = entryIndex; entryIndex = exitIndex; exitIndex = temp; }
       } else {
         entryIndex = Math.floor(priceData.length * 0.25);
         exitIndex = Math.floor(priceData.length * 0.85);
       }
 
-      let pathString = '';
-      let entryCoords = { x: 0, y: 0 };
-      let exitCoords = { x: 0, y: 0 };
+      let pathString = ''; let entryCoords = { x: 0, y: 0 }; let exitCoords = { x: 0, y: 0 };
 
       priceData.forEach((price, index) => {
         const x = (index / (priceData.length - 1)) * width;
         const y = height - (((price - minPrice) / range) * height); 
-
-        if (index === 0) {
-          pathString += `M ${x} ${y} `;
-        } else {
-          pathString += `L ${x} ${y} `;
-        }
-
+        if (index === 0) pathString += `M ${x} ${y} `; else pathString += `L ${x} ${y} `;
         if (index === entryIndex) entryCoords = { x, y };
         if (index === exitIndex) exitCoords = { x, y };
       });
 
       svg.innerHTML = `<path d="${pathString}" fill="none" stroke="rgba(255, 255, 255, 0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />`;
-
-      markerS.style.left = `${entryCoords.x}px`; 
-      markerS.style.top = `${entryCoords.y}px`;
-      markerS.classList.remove('hidden');
-
-      markerB.style.left = `${exitCoords.x}px`;
-      markerB.style.top = `${exitCoords.y}px`;
-      markerB.classList.remove('hidden');
+      markerS.style.left = `${entryCoords.x}px`; markerS.style.top = `${entryCoords.y}px`; markerS.classList.remove('hidden');
+      markerB.style.left = `${exitCoords.x}px`; markerB.style.top = `${exitCoords.y}px`; markerB.classList.remove('hidden');
     }
 
     async function fetchAndRenderRealChart() {
       const svg = document.getElementById('price-chart');
       const markerS = document.getElementById('marker-s');
       const markerB = document.getElementById('marker-b');
-      
       const symbol = "NQ=F"; 
       const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1m&range=7d`;
       const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
@@ -383,36 +382,23 @@
         
         const rawTimestamps = data.chart.result[0].timestamp;
         const rawPrices = data.chart.result[0].indicators.quote[0].close;
-        
         const dateVal = document.getElementById('in-date').value;
         if(!dateVal) return;
 
         const startOfDayUnix = Math.floor(new Date(`${dateVal}T00:00:00`).getTime() / 1000);
         const endOfDayUnix = Math.floor(new Date(`${dateVal}T23:59:59`).getTime() / 1000);
 
-        let dayTimestamps = [];
-        let priceData = [];
+        let dayTimestamps = [], priceData = [];
         for (let i = 0; i < rawTimestamps.length; i++) {
           if (rawTimestamps[i] >= startOfDayUnix && rawTimestamps[i] <= endOfDayUnix && rawPrices[i] !== null) {
-            dayTimestamps.push(rawTimestamps[i]);
-            priceData.push(rawPrices[i]);
+            dayTimestamps.push(rawTimestamps[i]); priceData.push(rawPrices[i]);
           }
         }
-
-        if(priceData.length === 0) {
-          throw new Error("No data for this specific date.");
-        }
-
+        if(priceData.length === 0) throw new Error("No data for this specific date.");
         drawSVGPath(svg, markerS, markerB, priceData, dayTimestamps, false);
-
       } catch (error) {
         console.warn("API Blocked or Failed. Rendering Fallback Chart.", error);
-        const fallbackData = [
-          100, 102, 101, 104, 103, 106, 105, 108, 107, 109, 
-          112, 110, 108, 105, 101, 95, 88, 80, 70, 60,      
-          55, 45, 35, 30, 25, 20, 15, 12, 10, 8,            
-          12, 15, 14, 18, 16, 22, 20, 25, 24, 28            
-        ];
+        const fallbackData = [100, 102, 101, 104, 103, 106, 105, 108, 107, 109, 112, 110, 108, 105, 101, 95, 88, 80, 70, 60, 55, 45, 35, 30, 25, 20, 15, 12, 10, 8, 12, 15, 14, 18, 16, 22, 20, 25, 24, 28];
         drawSVGPath(svg, markerS, markerB, fallbackData, null, true);
       }
     }
@@ -422,23 +408,19 @@
     document.getElementById('in-entry-time').addEventListener('input', fetchAndRenderRealChart);
     document.getElementById('in-exit-time').addEventListener('input', fetchAndRenderRealChart);
 
-
-    // --- 5. RENDER AND DOWNLOAD ---
+    // --- 6. RENDER AND DOWNLOAD ---
     function downloadImage() {
       const targetDOM = document.getElementById('capture-area');
-      
       document.fonts.ready.then(() => {
         htmlToImage.toPng(targetDOM, { pixelRatio: 3, useCORS: true })
-          .then(() => {
-            return htmlToImage.toPng(targetDOM, { pixelRatio: 3, useCORS: true });
-          })
-          .then(function (dataUrl) {
+          .then(() => htmlToImage.toPng(targetDOM, { pixelRatio: 3, useCORS: true }))
+          .then(dataUrl => {
             const fileLink = document.createElement('a');
             fileLink.download = 'trade-summary.png';
             fileLink.href = dataUrl;
             fileLink.click();
           })
-          .catch(function (error) {
+          .catch(error => {
             console.error('Render error:', error);
             alert('Generation failed. Check console for details.');
           });
