@@ -38,18 +38,33 @@
     input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
     input[type="color"]::-webkit-color-swatch { border: none; border-radius: 5px;}
     
-    /* Style for modern checkboxes */
     input[type="checkbox"] {
       accent-color: #ffffff;
       width: 16px;
       height: 16px;
       cursor: pointer;
     }
+    
+    input[type="range"] {
+      accent-color: #ffffff;
+      height: 4px;
+      background: #27272a;
+      border-radius: 4px;
+      appearance: none;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #ffffff;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body class="bg-[#09090b] text-white min-h-screen p-8 flex flex-col md:flex-row gap-12 items-center justify-center">
 
-  <!-- Datalist for preset color swatches in the color picker -->
   <datalist id="preset-colors">
     <option value="#ffffff">White</option>
     <option value="#86D99F">Default Green</option>
@@ -66,11 +81,33 @@
       <h2 class="text-xl font-bold tracking-tight text-white">Trade Setup</h2>
       <p class="text-xs text-zinc-400 mt-1">Configure your visual trade summary.</p>
     </div>
+
+    <!-- 0. Tradovate CSV Import (NEW) -->
+    <div class="space-y-2 pb-4 border-b border-zinc-800">
+      <span class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Automate</span>
+      <label class="flex items-center justify-center w-full p-3 bg-zinc-800/40 border border-zinc-700 rounded-lg text-sm text-zinc-300 hover:text-white hover:bg-zinc-700 cursor-pointer transition-colors">
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+        <span>Upload Tradovate CSV</span>
+        <input type="file" id="upload-csv" class="hidden" accept=".csv">
+      </label>
+      <p class="text-[10px] text-zinc-500 text-center">Auto-fills the most recent trade data.</p>
+    </div>
     
-    <!-- 1. Background Image Selector -->
-    <div class="space-y-2">
-      <span class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Background</span>
+    <!-- 1. Background Image Selector & Tools -->
+    <div class="space-y-3">
+      <span class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Background Options</span>
+      
       <div class="grid grid-cols-5 gap-2" id="bg-selector"></div>
+      
+      <label class="flex items-center justify-center w-full p-2 border border-dashed border-zinc-600 rounded-lg text-sm text-zinc-400 hover:text-white hover:border-zinc-400 cursor-pointer transition-colors">
+        <span>Upload Custom Image</span>
+        <input type="file" id="upload-bg" class="hidden" accept="image/*">
+      </label>
+
+      <label class="flex flex-col text-sm text-zinc-400 mt-2">
+        Dim Background
+        <input type="range" id="in-dimmer" min="0" max="0.9" step="0.05" value="0" class="mt-3">
+      </label>
     </div>
 
     <!-- 2. Profile Details -->
@@ -131,7 +168,7 @@
       </label>
     </div>
 
-    <!-- 5. Visibility Toggles (NEW) -->
+    <!-- 5. Visibility Toggles -->
     <div class="space-y-3 pt-4 border-t border-zinc-800">
       <span class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Visibility Controls</span>
       <div class="grid grid-cols-2 gap-y-2 gap-x-4">
@@ -151,7 +188,7 @@
       </div>
     </div>
 
-    <!-- 6. Color Customization (Updated with Datalist support) -->
+    <!-- 6. Color Customization -->
     <div class="space-y-3 pt-4 border-t border-zinc-800">
       <span class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Colors</span>
       <div class="grid grid-cols-2 gap-y-3 gap-x-4">
@@ -179,37 +216,44 @@
       </div>
     </div>
 
-    <button onclick="downloadImage()" class="mt-2 bg-white hover:bg-zinc-200 text-black font-bold py-3 rounded-xl w-full transition-colors">
-      Export Image
-    </button>
+    <!-- Action Buttons -->
+    <div class="flex gap-3 mt-2">
+      <button onclick="saveSettings()" class="bg-[#18181b] hover:bg-zinc-800 text-white font-bold py-3 rounded-xl w-1/3 transition-colors border border-zinc-700 text-sm">
+        Save Preset
+      </button>
+      <button onclick="downloadImage()" class="bg-white hover:bg-zinc-200 text-black font-bold py-3 rounded-xl w-2/3 transition-colors">
+        Export Image
+      </button>
+    </div>
   </div>
 
   <!-- Real-Time DOM Preview -->
   <div id="capture-area" class="relative w-[360px] h-[640px] bg-black bg-cover bg-center overflow-hidden tracking-[-0.04em]" style="background-image: none;">
     <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');</style>
+    
+    <div id="bg-overlay" class="absolute inset-0 bg-black pointer-events-none z-0" style="opacity: 0;"></div>
 
-    <div class="relative z-10 flex flex-col h-full pointer-events-none">
+    <div class="relative z-20 flex flex-col h-full pointer-events-none">
       
       <!-- Top Text Row -->
-      <div class="flex justify-start items-center text-[22px] px-6 pt-6 leading-none relative z-10" id="out-top-row" style="color: #ffffff;">
+      <div class="flex justify-start items-center text-[22px] px-6 pt-6 leading-none" id="out-top-row" style="color: #ffffff;">
         <span class="font-bold" id="out-brand">CELESTO</span>
         <span class="mx-2 font-medium pb-1 opacity-75" id="out-separator">×</span>
         <span class="font-medium" id="out-name">JENZ</span>
       </div>
 
-      <!-- SVG Price Chart Overlay -->
-      <div id="out-chart-container" class="absolute top-[80px] left-0 w-full h-[320px] pointer-events-none z-0">
+      <!-- SVG Price Chart Overlay (Z-10) -->
+      <div id="out-chart-container" class="absolute top-[80px] left-0 w-full h-[320px] pointer-events-none z-10">
         <svg id="price-chart" class="w-full h-full overflow-visible" preserveAspectRatio="none"></svg>
         <div id="marker-s" class="absolute hidden flex items-center justify-center w-[16px] h-[16px] bg-[#ff6b6b] text-black text-[9px] font-extrabold rounded-[3px] shadow-sm transform -translate-x-1/2 -translate-y-full mb-[2px]">S</div>
         <div id="marker-b" class="absolute hidden flex items-center justify-center w-[16px] h-[16px] bg-[#86D99F] text-black text-[9px] font-extrabold rounded-[3px] shadow-sm transform -translate-x-1/2 mt-[2px]">B</div>
       </div>
 
       <!-- Variable Output Block -->
-      <div class="mt-auto px-6 mb-125 w-full relative z-10">
-        
+      <div class="mt-auto px-6 mb-4 w-full">
         <!-- Ticker Output -->
         <div class="flex items-center gap-3 mb-2" id="out-ticker-container">
-          <div id="out-ticker-badge" class="w-8 h-8 rounded-full bg-[#009ee3] flex items-center justify-center text-white font-bold text-[13px] tracking-normal leading-none">100</div>
+          <div id="out-ticker-badge" class="w-10 h-10 rounded-full bg-[#009ee3] flex items-center justify-center text-white font-bold text-[13px] tracking-normal leading-none">100</div>
           <div class="text-[28px] font-medium leading-none" id="out-ticker" style="color: #ffffff;">NQ1!</div>
         </div>
 
@@ -241,7 +285,7 @@
       </div>
 
       <!-- Bottom Text Row -->
-      <div class="flex justify-between items-center text-[14px] leading-none mt-auto pb-6 px-6 font-semibold relative z-10" id="out-bottom-row" style="color: #ffffff;">
+      <div class="flex justify-between items-center text-[14px] leading-none mt-auto pb-6 px-6 font-semibold" id="out-bottom-row" style="color: #ffffff;">
         <span id="out-website">celesto.github.io</span>
         <span id="out-handle">@jenztornado</span>
       </div>
@@ -249,10 +293,114 @@
   </div>
 
   <script>
-    // --- 1. POPULATE BACKGROUND IMAGE SELECTOR ---
-    const bgContainer = document.getElementById('bg-selector');
     const captureArea = document.getElementById('capture-area');
 
+    // --- 0. TRADOVATE CSV PARSER (NEW) ---
+    // Safely parse CSV lines, keeping commas inside quotes together
+    function csvToArray(text) {
+      let p = '', row = [''], ret = [row], i = 0, r = 0, s = !0, l;
+      for (l of text) {
+        if ('"' === l) {
+          if (s && l === p) row[i] += l;
+          s = !s;
+        } else if (',' === l && s) l = row[++i] = '';
+        else if ('\n' === l && s) {
+          if ('\r' === p) row[i] = row[i].slice(0, -1);
+          row = ret[++r] = [l = '']; i = 0;
+        } else row[i] += l;
+        p = l;
+      }
+      return ret.filter(r => r.length > 1); // Remove empty trailing rows
+    }
+
+    // Format currency to strings like +$1,200.50 and +$1.2k
+    function formatCurrencyStrings(amount) {
+      const isPositive = amount >= 0;
+      const sign = isPositive ? '+$' : '-$';
+      const absVal = Math.abs(amount);
+      
+      const totalStr = sign + absVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      const shortStr = sign + (absVal >= 1000 ? (absVal / 1000).toFixed(1) + 'k' : absVal.toFixed(2));
+      
+      return { totalStr, shortStr };
+    }
+
+    document.getElementById('upload-csv').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        try {
+          const rows = csvToArray(event.target.result);
+          if (rows.length < 2) throw new Error("CSV is empty or invalid.");
+
+          // Clean headers to lowercase for flexible matching
+          const headers = rows[0].map(h => h.trim().toLowerCase());
+          const findCol = (keywords) => headers.findIndex(h => keywords.some(k => h.includes(k)));
+
+          // Dynamically map Tradovate columns by keyword
+          const idxSymbol = findCol(['symbol', 'contract', 'product', 'ticker']);
+          const idxQty = findCol(['qty', 'quantity', 'size', 'contracts']);
+          const idxEntryPrice = findCol(['entry price', 'open price', 'avg entry', 'buy price']);
+          const idxExitPrice = findCol(['exit price', 'close price', 'avg exit', 'sell price']);
+          const idxEntryTime = findCol(['entry time', 'open time', 'timestamp', 'date in']);
+          const idxExitTime = findCol(['exit time', 'close time', 'date out']);
+          const idxPnl = findCol(['p&l', 'pnl', 'profit', 'net']);
+
+          // Target the first actual data row (most recent trade usually row 1)
+          const data = rows[1]; 
+
+          // Update Ticker & Qty
+          if(idxSymbol !== -1 && data[idxSymbol]) document.getElementById('in-ticker').value = data[idxSymbol].trim();
+          if(idxQty !== -1 && data[idxQty]) document.getElementById('in-contracts').value = data[idxQty].trim();
+
+          // Update Prices
+          if(idxEntryPrice !== -1 && data[idxEntryPrice]) document.getElementById('in-entry').value = "$" + parseFloat(data[idxEntryPrice]).toFixed(2);
+          if(idxExitPrice !== -1 && data[idxExitPrice]) document.getElementById('in-exit').value = "$" + parseFloat(data[idxExitPrice]).toFixed(2);
+
+          // Update PnL
+          if(idxPnl !== -1 && data[idxPnl]) {
+            const rawPnl = parseFloat(data[idxPnl].replace(/[^0-9.-]+/g, ""));
+            const { totalStr, shortStr } = formatCurrencyStrings(rawPnl);
+            document.getElementById('in-total-pnl').value = totalStr;
+            document.getElementById('in-short-pnl').value = shortStr;
+          }
+
+          // Update Dates and Times
+          if(idxEntryTime !== -1 && data[idxEntryTime]) {
+            const dateObj = new Date(data[idxEntryTime]);
+            if(!isNaN(dateObj)) {
+              // YYYY-MM-DD format for Date input
+              document.getElementById('in-date').value = dateObj.getFullYear() + "-" + String(dateObj.getMonth() + 1).padStart(2, '0') + "-" + String(dateObj.getDate()).padStart(2, '0');
+              // HH:MM format for Time input
+              document.getElementById('in-entry-time').value = dateObj.toTimeString().slice(0,5);
+            }
+          }
+
+          if(idxExitTime !== -1 && data[idxExitTime]) {
+            const dateObj = new Date(data[idxExitTime]);
+            if(!isNaN(dateObj)) {
+              document.getElementById('in-exit-time').value = dateObj.toTimeString().slice(0,5);
+            }
+          }
+
+          // Dispatch events to instantly update UI and Redraw Chart
+          document.querySelectorAll('input').forEach(input => input.dispatchEvent(new Event('input')));
+          fetchAndRenderRealChart();
+          
+          alert("Trade successfully imported from CSV!");
+
+        } catch (error) {
+          console.error("CSV Parse Error:", error);
+          alert("Failed to parse CSV. Ensure it is a valid Tradovate export file.");
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    // --- 1. BACKGROUND LOGIC ---
+    const bgContainer = document.getElementById('bg-selector');
     for(let i = 1; i <= 10; i++) {
       const btn = document.createElement('button');
       btn.className = "w-full aspect-square bg-zinc-800 rounded-md overflow-hidden border-2 border-transparent hover:border-zinc-500 transition-all bg-cover bg-center";
@@ -265,24 +413,33 @@
       bgContainer.appendChild(btn);
     }
 
-    // --- 2. TEXT BINDINGS ---
-    const textDataNodes = [
-      { in: 'in-name', out: 'out-name' },
-      { in: 'in-handle', out: 'out-handle' },
-      { in: 'in-ticker', out: 'out-ticker' },
-      { in: 'in-short-pnl', out: 'out-short-pnl' },
-      { in: 'in-contracts', out: 'out-contracts' },
-      { in: 'in-entry', out: 'out-entry' },
-      { in: 'in-exit', out: 'out-exit' },
-      { in: 'in-total-pnl', out: 'out-total-pnl' }
-    ];
-    textDataNodes.forEach(node => {
-      document.getElementById(node.in).addEventListener('input', (e) => {
-        document.getElementById(node.out).textContent = e.target.value;
-      });
+    document.getElementById('upload-bg').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          Array.from(bgContainer.children).forEach(child => child.classList.replace('border-white', 'border-transparent'));
+          captureArea.style.backgroundImage = `url('${event.target.result}')`;
+        };
+        reader.readAsDataURL(file);
+      }
     });
 
-    // --- 3. COLOR BINDINGS ---
+    document.getElementById('in-dimmer').addEventListener('input', (e) => {
+      document.getElementById('bg-overlay').style.opacity = e.target.value;
+    });
+
+    // --- 2. BINDINGS ---
+    const textDataNodes = [
+      { in: 'in-name', out: 'out-name' }, { in: 'in-handle', out: 'out-handle' },
+      { in: 'in-ticker', out: 'out-ticker' }, { in: 'in-short-pnl', out: 'out-short-pnl' },
+      { in: 'in-contracts', out: 'out-contracts' }, { in: 'in-entry', out: 'out-entry' },
+      { in: 'in-exit', out: 'out-exit' }, { in: 'in-total-pnl', out: 'out-total-pnl' }
+    ];
+    textDataNodes.forEach(node => {
+      document.getElementById(node.in).addEventListener('input', (e) => { document.getElementById(node.out).textContent = e.target.value; });
+    });
+
     const colorMaps = [
       { input: 'color-top', targetId: 'out-top-row', prop: 'color' },
       { input: 'color-ticker', targetId: 'out-ticker', prop: 'color' },
@@ -292,28 +449,19 @@
       { input: 'color-bottom', targetId: 'out-bottom-row', prop: 'color' }
     ];
     colorMaps.forEach(map => {
-      document.getElementById(map.input).addEventListener('input', (e) => {
-        document.getElementById(map.targetId).style[map.prop] = e.target.value;
-      });
+      document.getElementById(map.input).addEventListener('input', (e) => { document.getElementById(map.targetId).style[map.prop] = e.target.value; });
     });
     document.getElementById('color-labels').addEventListener('input', (e) => {
       document.querySelectorAll('.out-label').forEach(el => el.style.color = e.target.value);
     });
 
-    // --- 4. VISIBILITY BINDINGS ---
     const visibilityNodes = [
-      { check: 'chk-brand', target: 'out-brand' },
-      { check: 'chk-separator', target: 'out-separator' },
-      { check: 'chk-name', target: 'out-name' },
-      { check: 'chk-chart', target: 'out-chart-container' },
-      { check: 'chk-badge', target: 'out-ticker-badge' },
-      { check: 'chk-ticker', target: 'out-ticker' },
-      { check: 'chk-pnl-box', target: 'out-short-pnl' },
-      { check: 'chk-contracts', target: 'out-row-contracts' },
-      { check: 'chk-entry', target: 'out-row-entry' },
-      { check: 'chk-exit', target: 'out-row-exit' },
-      { check: 'chk-total', target: 'out-row-total-pnl' },
-      { check: 'chk-website', target: 'out-website' },
+      { check: 'chk-brand', target: 'out-brand' }, { check: 'chk-separator', target: 'out-separator' },
+      { check: 'chk-name', target: 'out-name' }, { check: 'chk-chart', target: 'out-chart-container' },
+      { check: 'chk-badge', target: 'out-ticker-badge' }, { check: 'chk-ticker', target: 'out-ticker' },
+      { check: 'chk-pnl-box', target: 'out-short-pnl' }, { check: 'chk-contracts', target: 'out-row-contracts' },
+      { check: 'chk-entry', target: 'out-row-entry' }, { check: 'chk-exit', target: 'out-row-exit' },
+      { check: 'chk-total', target: 'out-row-total-pnl' }, { check: 'chk-website', target: 'out-website' },
       { check: 'chk-handle', target: 'out-handle' }
     ];
     visibilityNodes.forEach(node => {
@@ -322,9 +470,48 @@
       });
     });
 
-    // --- 5. CHART & API LOGIC ---
-    function parsePriceString(priceStr) { return parseFloat(priceStr.replace(/[^0-9.-]+/g, "")); }
+    // --- 3. SAVE AND LOAD STATE ---
+    function saveSettings() {
+      const settings = {};
+      const inputs = document.querySelectorAll('input');
+      inputs.forEach(input => {
+        if (input.type === 'file' || input.id === 'upload-csv') return;
+        settings[input.id] = input.type === 'checkbox' ? input.checked : input.value;
+      });
+      settings['bg-image'] = document.getElementById('capture-area').style.backgroundImage;
+      
+      try {
+        localStorage.setItem('tradeGeneratorSettings', JSON.stringify(settings));
+        alert('Preset saved successfully! It will automatically load next time.');
+      } catch (e) {
+        alert('Could not save settings (Custom image might be too large).');
+      }
+    }
 
+    function loadSettings() {
+      const saved = localStorage.getItem('tradeGeneratorSettings');
+      if (saved) {
+        const settings = JSON.parse(saved);
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+          if (input.type === 'file' || input.id === 'upload-csv') return;
+          if (settings[input.id] !== undefined) {
+            if (input.type === 'checkbox') {
+              input.checked = settings[input.id];
+              input.dispatchEvent(new Event('change'));
+            } else {
+              input.value = settings[input.id];
+              input.dispatchEvent(new Event('input'));
+            }
+          }
+        });
+        if (settings['bg-image']) {
+          document.getElementById('capture-area').style.backgroundImage = settings['bg-image'];
+        }
+      }
+    }
+
+    // --- 4. CHART & API LOGIC ---
     function drawSVGPath(svg, markerS, markerB, priceData, timestamps, isFallback = false) {
       const minPrice = Math.min(...priceData);
       const maxPrice = Math.max(...priceData);
@@ -403,12 +590,16 @@
       }
     }
 
-    window.addEventListener('DOMContentLoaded', fetchAndRenderRealChart);
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSettings(); 
+      fetchAndRenderRealChart(); 
+    });
+    
     document.getElementById('in-date').addEventListener('input', fetchAndRenderRealChart);
     document.getElementById('in-entry-time').addEventListener('input', fetchAndRenderRealChart);
     document.getElementById('in-exit-time').addEventListener('input', fetchAndRenderRealChart);
 
-    // --- 6. RENDER AND DOWNLOAD ---
+    // --- 5. EXPORT ---
     function downloadImage() {
       const targetDOM = document.getElementById('capture-area');
       document.fonts.ready.then(() => {
