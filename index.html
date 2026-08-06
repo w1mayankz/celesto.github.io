@@ -63,19 +63,20 @@
     }
   </style>
 </head>
-<body class="bg-[#09090b] text-white min-h-screen p-8 flex flex-col md:flex-row gap-12 items-center justify-center">
+<body class="bg-[#09090b] text-white min-h-screen p-8 flex flex-col md:flex-row gap-12 items-start justify-center md:items-center py-12">
 
   <datalist id="preset-colors">
     <option value="#ffffff">White</option>
     <option value="#86D99F">Default Green</option>
-    <option value="#ff6b6b">Red</option>
+    <option value="#ff6b6b">Loss Red</option>
     <option value="#009ee3">Ticker Blue</option>
-    <option value="#d4d4d8">Zinc Gray</option>
+    <option value="#d4d4d8">Zinc Gray / Breakeven</option>
     <option value="#000000">Black</option>
   </datalist>
 
   <!-- Minimalist Data Input Form -->
-  <div class="bg-[#18181b] border border-[#27272a] p-6 rounded-2xl w-full max-w-[420px] flex flex-col gap-5 max-h-[90vh] overflow-y-auto shadow-2xl">
+  <!-- Removed max-h and overflow limits to stop internal scrolling -->
+  <div class="bg-[#18181b] border border-[#27272a] p-6 rounded-2xl w-full max-w-[420px] flex flex-col gap-5 shadow-2xl">
     
     <div>
       <h2 class="text-xl font-bold tracking-tight text-white">Trade Setup</h2>
@@ -95,7 +96,10 @@
     
     <!-- 1. Background Image Selector & Tools -->
     <div class="space-y-3">
-      <span class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Background Options</span>
+      <div class="flex justify-between items-end">
+        <span class="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Background Options</span>
+        <button id="btn-reset-bgs" class="text-[10px] text-red-400 hover:text-red-300 transition-colors">Reset Defaults</button>
+      </div>
       
       <div class="grid grid-cols-5 gap-2" id="bg-selector"></div>
       
@@ -228,10 +232,9 @@
   </div>
 
   <!-- Real-Time DOM Preview -->
-  <div id="capture-area" class="relative w-[360px] h-[640px] bg-black bg-cover bg-center overflow-hidden tracking-[-0.04em]" style="background-image: none;">
+  <div id="capture-area" class="relative w-[360px] h-[640px] bg-black bg-cover bg-center overflow-hidden tracking-[-0.04em] shrink-0" style="background-image: none;">
     <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');</style>
     
-    <!-- Dimmer Overlay (Z-0) -->
     <div id="bg-overlay" class="absolute inset-0 bg-black pointer-events-none z-0" style="opacity: 0;"></div>
 
     <div class="relative z-20 flex flex-col h-full pointer-events-none">
@@ -252,19 +255,16 @@
 
       <!-- Variable Output Block -->
       <div class="mt-auto px-6 mb-4 w-full">
-        <!-- Ticker Output -->
         <div class="flex items-center gap-3 mb-2" id="out-ticker-container">
           <div id="out-ticker-badge" class="w-10 h-10 rounded-full bg-[#009ee3] flex items-center justify-center text-white font-bold text-[13px] tracking-normal leading-none">100</div>
           <div class="text-[28px] font-medium leading-none" id="out-ticker" style="color: #ffffff;">NQ1!</div>
         </div>
 
-        <!-- Profit Pill Output -->
-        <div class="mt-5 text-[42px] leading-none font-extrabold py-2 px-2 rounded-xl inline-flex items-center justify-center mb-8" 
+        <div class="mt-5 text-[42px] leading-none font-extrabold py-2 px-2 rounded-xl inline-flex items-center justify-center mb-8 transition-colors" 
              id="out-short-pnl" style="background-color: #86D99F; color: #000000;">
           +$12.4k
         </div>
 
-        <!-- Trade Variables -->
         <div class="space-y-[18px] text-[19px] leading-none">
           <div class="flex justify-between items-center w-full" id="out-row-contracts">
             <span class="font-bold out-label" style="color: #d4d4d8;">Contracts</span>
@@ -280,7 +280,7 @@
           </div>
           <div class="flex justify-between items-center w-full pt-4" id="out-row-total-pnl">
             <span class="font-bold out-label" style="color: #d4d4d8;">Total PnL</span>
-            <span class="font-bold text-right" id="out-total-pnl" style="color: #86D99F;">$12,438.50</span>
+            <span class="font-bold text-right transition-colors" id="out-total-pnl" style="color: #86D99F;">$12,438.50</span>
           </div>
         </div>
       </div>
@@ -296,7 +296,117 @@
   <script>
     const captureArea = document.getElementById('capture-area');
 
-    // --- 0. TRADOVATE CSV PARSER (Self-Healing Update) ---
+    // --- Dynamic PnL Coloring Logic ---
+    function autoColorPnL() {
+      const val = document.getElementById('in-short-pnl').value;
+      const num = parseFloat(val.replace(/[^0-9.-]+/g, ""));
+      
+      if (isNaN(num)) return;
+
+      let color = '#86D99F'; // Green Profit
+      if (num < 0) color = '#ff6b6b'; // Red Loss
+      else if (num === 0) color = '#d4d4d8'; // Gray Breakeven
+
+      const pnlBg = document.getElementById('color-pnl-bg');
+      const pnlTotal = document.getElementById('color-total');
+      
+      pnlBg.value = color;
+      pnlTotal.value = color;
+      
+      // Instantly trigger UI update
+      pnlBg.dispatchEvent(new Event('input'));
+      pnlTotal.dispatchEvent(new Event('input'));
+    }
+
+    document.getElementById('in-short-pnl').addEventListener('input', autoColorPnL);
+    document.getElementById('in-total-pnl').addEventListener('input', autoColorPnL);
+
+    // --- BACKGROUND ENGINE (Defaults + Uploads + Delete Icons) ---
+    const bgContainer = document.getElementById('bg-selector');
+    const defaultBgs = Array.from({length: 10}, (_, i) => `assets/${i+1}.jpeg`);
+    let allBgs = [...defaultBgs];
+
+    // Load any custom uploaded backgrounds
+    try {
+      const storedBgs = localStorage.getItem('customTradeBgs');
+      if (storedBgs) allBgs = [...defaultBgs, ...JSON.parse(storedBgs)];
+    } catch(e) {}
+
+    function renderBgGrid() {
+      bgContainer.innerHTML = '';
+      allBgs.forEach((bgSrc, index) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = "relative w-full aspect-square";
+        
+        const btn = document.createElement('button');
+        btn.className = "w-full h-full bg-zinc-800 rounded-md overflow-hidden border-2 border-transparent hover:border-zinc-500 transition-all bg-cover bg-center";
+        btn.style.backgroundImage = `url('${bgSrc}')`;
+        btn.onclick = () => {
+          Array.from(bgContainer.querySelectorAll('button.border-2')).forEach(child => child.classList.replace('border-white', 'border-transparent'));
+          btn.classList.replace('border-transparent', 'border-white');
+          captureArea.style.backgroundImage = `url('${bgSrc}')`;
+        };
+        
+        wrapper.appendChild(btn);
+
+        // Add Delete icon to every thumbnail
+        const delBtn = document.createElement('button');
+        delBtn.innerHTML = `<svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>`;
+        delBtn.className = "absolute top-0 right-0 bg-red-600/90 hover:bg-red-500 text-white w-[18px] h-[18px] flex items-center justify-center rounded-bl-md rounded-tr-md transition-colors shadow-lg z-10";
+        delBtn.onclick = (e) => {
+          e.stopPropagation();
+          allBgs.splice(index, 1);
+          saveCustomBgs();
+          renderBgGrid();
+        };
+        wrapper.appendChild(delBtn);
+
+        bgContainer.appendChild(wrapper);
+      });
+    }
+
+    function saveCustomBgs() {
+      const customOnly = allBgs.filter(src => !src.startsWith('assets/'));
+      try {
+        localStorage.setItem('customTradeBgs', JSON.stringify(customOnly));
+      } catch(e) {
+        alert("Browser storage limit reached. Delete some old images first.");
+      }
+    }
+
+    // Upload new image to grid
+    document.getElementById('upload-bg').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          allBgs.push(event.target.result);
+          saveCustomBgs();
+          renderBgGrid();
+          // Auto-click the newest one
+          bgContainer.lastElementChild.querySelector('button.border-2').click();
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Reset button entirely
+    document.getElementById('btn-reset-bgs').onclick = () => {
+      if(confirm('Are you sure you want to delete all your custom uploads?')) {
+        allBgs = [...defaultBgs];
+        saveCustomBgs();
+        renderBgGrid();
+        bgContainer.firstElementChild.querySelector('button.border-2').click();
+      }
+    };
+
+    renderBgGrid(); // Initial paint
+
+    document.getElementById('in-dimmer').addEventListener('input', (e) => {
+      document.getElementById('bg-overlay').style.opacity = e.target.value;
+    });
+
+    // --- TRADOVATE CSV PARSER ---
     function csvToArray(text) {
       let p = '', row = [''], ret = [row], i = 0, r = 0, s = !0, l;
       for (l of text) {
@@ -315,7 +425,7 @@
 
     function formatCurrencyStrings(amount) {
       const isPositive = amount >= 0;
-      const sign = isPositive ? '+$' : '-$';
+      const sign = isPositive ? '+$' : (amount < 0 ? '-$' : '$');
       const absVal = Math.abs(amount);
       const totalStr = sign + absVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
       const shortStr = sign + (absVal >= 1000 ? (absVal / 1000).toFixed(1) + 'k' : absVal.toFixed(2));
@@ -350,15 +460,11 @@
           if(idxEntryPrice !== -1 && data[idxEntryPrice]) document.getElementById('in-entry').value = "$" + parseFloat(data[idxEntryPrice]).toFixed(2);
           if(idxExitPrice !== -1 && data[idxExitPrice]) document.getElementById('in-exit').value = "$" + parseFloat(data[idxExitPrice]).toFixed(2);
 
-          // Update PnL - With Failsafe for unquoted missing commas
           if(idxPnl !== -1 && data[idxPnl]) {
             let pnlString = data[idxPnl];
-            
-            // SELF-HEALING CSV PATCH: Stitches broken money formats back together
             if (data.length > headers.length && data[idxPnl + 1] && /^[0-9]+/.test(data[idxPnl + 1].trim())) {
               pnlString += data[idxPnl + 1];
             }
-
             const rawPnl = parseFloat(pnlString.replace(/[^0-9.-]+/g, ""));
             const { totalStr, shortStr } = formatCurrencyStrings(rawPnl);
             document.getElementById('in-total-pnl').value = totalStr;
@@ -392,37 +498,7 @@
       reader.readAsText(file);
     });
 
-    // --- 1. BACKGROUND LOGIC ---
-    const bgContainer = document.getElementById('bg-selector');
-    for(let i = 1; i <= 10; i++) {
-      const btn = document.createElement('button');
-      btn.className = "w-full aspect-square bg-zinc-800 rounded-md overflow-hidden border-2 border-transparent hover:border-zinc-500 transition-all bg-cover bg-center";
-      btn.style.backgroundImage = `url('assets/${i}.jpeg')`;
-      btn.onclick = () => {
-        Array.from(bgContainer.children).forEach(child => child.classList.replace('border-white', 'border-transparent'));
-        btn.classList.replace('border-transparent', 'border-white');
-        captureArea.style.backgroundImage = `url('assets/${i}.jpeg')`;
-      };
-      bgContainer.appendChild(btn);
-    }
-
-    document.getElementById('upload-bg').addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-          Array.from(bgContainer.children).forEach(child => child.classList.replace('border-white', 'border-transparent'));
-          captureArea.style.backgroundImage = `url('${event.target.result}')`;
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-
-    document.getElementById('in-dimmer').addEventListener('input', (e) => {
-      document.getElementById('bg-overlay').style.opacity = e.target.value;
-    });
-
-    // --- 2. BINDINGS ---
+    // --- BINDINGS ---
     const textDataNodes = [
       { in: 'in-name', out: 'out-name' }, { in: 'in-handle', out: 'out-handle' },
       { in: 'in-ticker', out: 'out-ticker' }, { in: 'in-short-pnl', out: 'out-short-pnl' },
@@ -463,7 +539,7 @@
       });
     });
 
-    // --- 3. SAVE AND LOAD STATE ---
+    // --- SAVE AND LOAD STATE ---
     function saveSettings() {
       const settings = {};
       const inputs = document.querySelectorAll('input');
@@ -477,7 +553,7 @@
         localStorage.setItem('tradeGeneratorSettings', JSON.stringify(settings));
         alert('Preset saved successfully! It will automatically load next time.');
       } catch (e) {
-        alert('Could not save settings (Custom image might be too large).');
+        alert('Could not save settings.');
       }
     }
 
@@ -504,7 +580,7 @@
       }
     }
 
-    // --- 4. CHART & API LOGIC ---
+    // --- CHART & API LOGIC ---
     function drawSVGPath(svg, markerS, markerB, priceData, timestamps, isFallback = false) {
       const minPrice = Math.min(...priceData);
       const maxPrice = Math.max(...priceData);
@@ -585,6 +661,7 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       loadSettings(); 
+      autoColorPnL(); // Make sure PnL colors match the loaded state
       fetchAndRenderRealChart(); 
     });
     
@@ -592,7 +669,7 @@
     document.getElementById('in-entry-time').addEventListener('input', fetchAndRenderRealChart);
     document.getElementById('in-exit-time').addEventListener('input', fetchAndRenderRealChart);
 
-    // --- 5. EXPORT ---
+    // --- EXPORT ---
     function downloadImage() {
       const targetDOM = document.getElementById('capture-area');
       document.fonts.ready.then(() => {
