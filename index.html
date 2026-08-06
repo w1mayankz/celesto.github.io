@@ -166,15 +166,15 @@
       </label>
       <label class="flex flex-col text-sm text-zinc-400">
         Entry Price
-        <input type="text" id="in-entry" value="28698.50" class="mt-1 p-2 bg-[#09090b] border border-zinc-800 text-white rounded-lg outline-none focus:border-zinc-500">
+        <input type="text" id="in-entry" value="$28,698.50" class="mt-1 p-2 bg-[#09090b] border border-zinc-800 text-white rounded-lg outline-none focus:border-zinc-500">
       </label>
       <label class="flex flex-col text-sm text-zinc-400">
         Exit Price
-        <input type="text" id="in-exit" value="29912.25" class="mt-1 p-2 bg-[#09090b] border border-zinc-800 text-white rounded-lg outline-none focus:border-zinc-500">
+        <input type="text" id="in-exit" value="$29,912.25" class="mt-1 p-2 bg-[#09090b] border border-zinc-800 text-white rounded-lg outline-none focus:border-zinc-500">
       </label>
       <label class="flex flex-col text-sm text-zinc-400">
-        Short PnL Text
-        <input type="text" id="in-short-pnl" value="12400" class="mt-1 p-2 bg-[#09090b] border border-zinc-800 text-white rounded-lg outline-none focus:border-zinc-500">
+        PnL Box Text
+        <input type="text" id="in-short-pnl" value="12438.50" class="mt-1 p-2 bg-[#09090b] border border-zinc-800 text-white rounded-lg outline-none focus:border-zinc-500">
       </label>
       <label class="flex flex-col text-sm text-zinc-400">
         Total PnL
@@ -265,16 +265,16 @@
 
       <!-- Variable Output Block -->
       <div class="mt-auto px-6 mb-4 w-full">
-        <!-- Dynamic Logo Output -->
+        <!-- Dynamic Asset Logo Output -->
         <div class="flex items-center gap-3 mb-2" id="out-ticker-container">
-          <img id="out-ticker-logo" src="assets/nasdaq.png" class="w-8 h-8 object-contain">
-          <div class="text-[28px] font-medium leading-none" id="out-ticker" style="color: #ffffff;">NQ</div>
+          <img id="out-ticker-logo" src="assets/nasdaq.png" class="w-8 h-8 object-cover rounded-full">
+          <div class="text-[28px] font-medium leading-none" id="out-ticker" style="color: #ffffff;">NQ1!</div>
         </div>
 
         <!-- Profit Pill Output -->
         <div class="mt-5 text-[42px] leading-none font-extrabold py-2 px-2 rounded-xl inline-flex items-center justify-center mb-8 transition-colors" 
              id="out-short-pnl" style="background-color: #86D99F; color: #000000;">
-          +$12.4k
+          +$12,438.50
         </div>
 
         <!-- Trade Variables -->
@@ -293,7 +293,7 @@
           </div>
           <div class="flex justify-between items-center w-full pt-4" id="out-row-total-pnl">
             <span class="font-bold out-label" style="color: #d4d4d8;">Total PnL</span>
-            <span class="font-bold text-right transition-colors" id="out-total-pnl" style="color: #86D99F;">$12,438.50</span>
+            <span class="font-bold text-right transition-colors" id="out-total-pnl" style="color: #86D99F;">+$12,438.50</span>
           </div>
         </div>
       </div>
@@ -326,7 +326,7 @@
     assetsList.forEach(asset => {
       const opt = document.createElement('div');
       opt.className = "flex items-center gap-3 p-3 hover:bg-zinc-800 cursor-pointer transition-colors";
-      opt.innerHTML = `<img src="${asset.img}" class="w-5 h-5 object-contain"> <span class="text-white text-sm">${asset.name}</span>`;
+      opt.innerHTML = `<img src="${asset.img}" class="w-5 h-5 object-cover rounded-full"> <span class="text-white text-sm">${asset.name}</span>`;
       opt.onclick = () => {
         setAsset(asset.id);
         assetOptions.classList.add('hidden');
@@ -343,8 +343,9 @@
 
     function setAsset(id) {
       const asset = assetsList.find(a => a.id === id) || assetsList[0];
-      document.getElementById('asset-select-display').innerHTML = `<img src="${asset.img}" class="w-5 h-5 object-contain"> <span class="text-white font-medium">${asset.id}</span>`;
-      document.getElementById('out-ticker').textContent = asset.id;
+      document.getElementById('asset-select-display').innerHTML = `<img src="${asset.img}" class="w-5 h-5 object-cover rounded-full"> <span class="text-white font-medium">${asset.id}</span>`;
+      document.getElementById('out-ticker').textContent = asset.id + "1!";
+      document.getElementById('in-ticker').value = asset.id + "1!";
       document.getElementById('out-ticker-logo').src = asset.img;
       document.getElementById('asset-select-btn').dataset.value = asset.id;
       
@@ -353,9 +354,10 @@
     }
     setAsset('NQ'); // Init default
 
-    // --- 1. SMART TEXT FORMATTER ---
-    function formatMoney(val, includeSign = false, isShort = false) {
-      const num = parseFloat(String(val).replace(/[^0-9.-]+/g, ""));
+    // --- 1. SMART TEXT FORMATTER (Full Strings Only) ---
+    function formatMoney(val, includeSign = false) {
+      let cleanStr = String(val).replace(/[^0-9.-]+/g, "");
+      const num = parseFloat(cleanStr);
       if (isNaN(num)) return val; 
       
       const absVal = Math.abs(num);
@@ -363,10 +365,9 @@
       if (includeSign) {
         if (num > 0) prefix = '+$';
         else if (num < 0) prefix = '-$';
-        else prefix = '+$'; // Breakeven
+        else prefix = '+$'; 
       }
       
-      if (isShort) return prefix + (absVal >= 1000 ? (absVal / 1000).toFixed(1) + 'k' : absVal.toFixed(2));
       return prefix + absVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     }
 
@@ -387,15 +388,22 @@
       pnlTotal.dispatchEvent(new Event('input'));
     }
 
-    // --- 2. BACKGROUND ENGINE ---
+    // --- 2. BACKGROUND ENGINE (Global Gray Delete Icons & Persistence) ---
     const bgContainer = document.getElementById('bg-selector');
     const defaultBgs = Array.from({length: 10}, (_, i) => `assets/${i+1}.jpeg`);
-    let allBgs = [...defaultBgs];
+    let allBgs = [];
 
     try {
-      const storedBgs = localStorage.getItem('customTradeBgs');
-      if (storedBgs) allBgs = [...defaultBgs, ...JSON.parse(storedBgs)];
-    } catch(e) {}
+      const storedBgs = localStorage.getItem('tradeGeneratorBgs');
+      if (storedBgs) {
+        allBgs = JSON.parse(storedBgs);
+        if (allBgs.length === 0) allBgs = [...defaultBgs]; 
+      } else {
+        allBgs = [...defaultBgs];
+      }
+    } catch(e) {
+      allBgs = [...defaultBgs];
+    }
 
     function renderBgGrid() {
       bgContainer.innerHTML = '';
@@ -413,28 +421,25 @@
         };
         wrapper.appendChild(btn);
 
-        // Minimalist Cross Icon (No red background)
-        if (index >= 10) {
-          const delBtn = document.createElement('button');
-          delBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>`;
-          delBtn.className = "absolute top-1 right-1 text-red-500 hover:text-red-400 drop-shadow-md z-10 transition-colors";
-          delBtn.onclick = (e) => {
-            e.stopPropagation();
-            if (confirm("Are you sure you want to delete this custom background?")) {
-              allBgs.splice(index, 1);
-              saveCustomBgs();
-              renderBgGrid();
-            }
-          };
-          wrapper.appendChild(delBtn);
-        }
+        // Global Gray Delete Icon for ALL images
+        const delBtn = document.createElement('button');
+        delBtn.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>`;
+        delBtn.className = "absolute top-1 right-1 text-zinc-400 hover:text-red-400 bg-zinc-900/60 rounded-md p-1 backdrop-blur-sm transition-colors z-10";
+        delBtn.onclick = (e) => {
+          e.stopPropagation();
+          if (confirm("Are you sure you want to delete this background?")) {
+            allBgs.splice(index, 1);
+            saveBgs();
+            renderBgGrid();
+          }
+        };
+        wrapper.appendChild(delBtn);
         bgContainer.appendChild(wrapper);
       });
     }
 
-    function saveCustomBgs() {
-      const customOnly = allBgs.filter(src => !src.startsWith('assets/'));
-      try { localStorage.setItem('customTradeBgs', JSON.stringify(customOnly)); } catch(e) {}
+    function saveBgs() {
+      try { localStorage.setItem('tradeGeneratorBgs', JSON.stringify(allBgs)); } catch(e) {}
     }
 
     document.getElementById('upload-bg').addEventListener('change', function(e) {
@@ -443,7 +448,7 @@
         const reader = new FileReader();
         reader.onload = function(event) {
           allBgs.push(event.target.result);
-          saveCustomBgs();
+          saveBgs();
           renderBgGrid();
           bgContainer.lastElementChild.querySelector('button.border-2').click();
         };
@@ -452,11 +457,11 @@
     });
 
     document.getElementById('btn-reset-bgs').onclick = () => {
-      if(confirm('Delete all custom uploads and reset to defaults?')) {
+      if(confirm('Delete all custom uploads and restore the 10 default images?')) {
         allBgs = [...defaultBgs];
-        saveCustomBgs();
+        saveBgs();
         renderBgGrid();
-        bgContainer.firstElementChild.querySelector('button.border-2').click();
+        if(bgContainer.firstElementChild) bgContainer.firstElementChild.querySelector('button.border-2').click();
       }
     };
     renderBgGrid();
@@ -468,28 +473,27 @@
     // --- 3. BINDINGS & FORMATTERS ---
     const textDataNodes = [
       { in: 'in-name', out: 'out-name' }, { in: 'in-handle', out: 'out-handle' },
-      { in: 'in-contracts', out: 'out-contracts' }
+      { in: 'in-contracts', out: 'out-contracts' }, { in: 'in-ticker', out: 'out-ticker'}
     ];
     
-    // Standard Strings
     textDataNodes.forEach(node => {
       document.getElementById(node.in).addEventListener('input', (e) => { document.getElementById(node.out).textContent = e.target.value; });
     });
 
-    // Smart Formatted Money Strings
+    // Formatted Money Strings (No 'k' abbreviation)
     document.getElementById('in-short-pnl').addEventListener('input', (e) => { 
-      document.getElementById('out-short-pnl').textContent = formatMoney(e.target.value, true, true);
+      document.getElementById('out-short-pnl').textContent = formatMoney(e.target.value, true);
       autoColorPnL();
     });
     document.getElementById('in-total-pnl').addEventListener('input', (e) => { 
-      document.getElementById('out-total-pnl').textContent = formatMoney(e.target.value, true, false);
+      document.getElementById('out-total-pnl').textContent = formatMoney(e.target.value, true);
       autoColorPnL();
     });
     document.getElementById('in-entry').addEventListener('input', (e) => { 
-      document.getElementById('out-entry').textContent = formatMoney(e.target.value, false, false);
+      document.getElementById('out-entry').textContent = formatMoney(e.target.value, false);
     });
     document.getElementById('in-exit').addEventListener('input', (e) => { 
-      document.getElementById('out-exit').textContent = formatMoney(e.target.value, false, false);
+      document.getElementById('out-exit').textContent = formatMoney(e.target.value, false);
     });
 
     // Run initial format on load
@@ -542,6 +546,14 @@
       return ret.filter(r => r.length > 1);
     }
 
+    function formatCurrencyStrings(amount) {
+      const isPositive = amount >= 0;
+      const sign = isPositive ? '+$' : (amount < 0 ? '-$' : '+$');
+      const absVal = Math.abs(amount);
+      const totalStr = sign + absVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      return { totalStr, shortStr: totalStr };
+    }
+
     document.getElementById('upload-csv').addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -579,10 +591,12 @@
           if(idxPnl !== -1 && data[idxPnl]) {
             let pnlStr = data[idxPnl];
             if (data.length > headers.length && data[idxPnl + 1] && /^[0-9]+/.test(data[idxPnl + 1].trim())) {
-              pnlStr += data[idxPnl + 1]; // Heal broken commas
+              pnlStr += data[idxPnl + 1]; 
             }
-            document.getElementById('in-short-pnl').value = pnlStr;
-            document.getElementById('in-total-pnl').value = pnlStr;
+            const rawPnl = parseFloat(pnlStr.replace(/[^0-9.-]+/g, ""));
+            const { totalStr, shortStr } = formatCurrencyStrings(rawPnl);
+            document.getElementById('in-short-pnl').value = shortStr;
+            document.getElementById('in-total-pnl').value = totalStr;
           }
           if(idxEntryTime !== -1 && data[idxEntryTime]) {
             const d = new Date(data[idxEntryTime]);
