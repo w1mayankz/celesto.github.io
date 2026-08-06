@@ -75,7 +75,6 @@
   </datalist>
 
   <!-- Minimalist Data Input Form -->
-  <!-- Removed max-h and overflow limits to stop internal scrolling -->
   <div class="bg-[#18181b] border border-[#27272a] p-6 rounded-2xl w-full max-w-[420px] flex flex-col gap-5 shadow-2xl">
     
     <div>
@@ -146,29 +145,40 @@
 
     <!-- 4. Trade Variables -->
     <div class="grid grid-cols-2 gap-4">
-      <label class="flex flex-col text-sm text-zinc-400">
-        Ticker
-        <input type="text" id="in-ticker" value="NQ1!" class="mt-1 p-2 bg-[#09090b] border border-zinc-800 text-white rounded-lg outline-none focus:border-zinc-500">
-      </label>
+      
+      <!-- Custom Asset Dropdown -->
+      <div class="flex flex-col text-sm text-zinc-400 relative" id="asset-dropdown-container">
+        <span class="mb-1">Asset</span>
+        <div id="asset-select-btn" class="p-2 bg-[#09090b] border border-zinc-800 text-white rounded-lg cursor-pointer flex justify-between items-center transition-colors">
+          <div class="flex items-center gap-2" id="asset-select-display">
+            <!-- Injected by JS -->
+          </div>
+          <svg class="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </div>
+        <div id="asset-options" class="absolute top-[100%] left-0 w-full mt-1 bg-[#18181b] border border-zinc-700 rounded-lg shadow-xl hidden z-50 overflow-hidden">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
       <label class="flex flex-col text-sm text-zinc-400">
         Contracts
         <input type="number" id="in-contracts" value="3" class="mt-1 p-2 bg-[#09090b] border border-zinc-800 text-white rounded-lg outline-none focus:border-zinc-500">
       </label>
       <label class="flex flex-col text-sm text-zinc-400">
         Entry Price
-        <input type="text" id="in-entry" value="$28,698.50" class="mt-1 p-2 bg-[#09090b] border border-zinc-800 text-white rounded-lg outline-none focus:border-zinc-500">
+        <input type="text" id="in-entry" value="28698.50" class="mt-1 p-2 bg-[#09090b] border border-zinc-800 text-white rounded-lg outline-none focus:border-zinc-500">
       </label>
       <label class="flex flex-col text-sm text-zinc-400">
         Exit Price
-        <input type="text" id="in-exit" value="$29,912.25" class="mt-1 p-2 bg-[#09090b] border border-zinc-800 text-white rounded-lg outline-none focus:border-zinc-500">
+        <input type="text" id="in-exit" value="29912.25" class="mt-1 p-2 bg-[#09090b] border border-zinc-800 text-white rounded-lg outline-none focus:border-zinc-500">
       </label>
       <label class="flex flex-col text-sm text-zinc-400">
         Short PnL Text
-        <input type="text" id="in-short-pnl" value="+$12.4k" class="mt-1 p-2 bg-[#09090b] border border-zinc-800 text-white rounded-lg outline-none focus:border-zinc-500">
+        <input type="text" id="in-short-pnl" value="12400" class="mt-1 p-2 bg-[#09090b] border border-zinc-800 text-white rounded-lg outline-none focus:border-zinc-500">
       </label>
       <label class="flex flex-col text-sm text-zinc-400">
         Total PnL
-        <input type="text" id="in-total-pnl" value="$12,438.50" class="mt-1 p-2 bg-[#09090b] border border-zinc-800 text-white rounded-lg outline-none focus:border-zinc-500">
+        <input type="text" id="in-total-pnl" value="12438.50" class="mt-1 p-2 bg-[#09090b] border border-zinc-800 text-white rounded-lg outline-none focus:border-zinc-500">
       </label>
     </div>
 
@@ -180,7 +190,7 @@
         <label class="flex items-center gap-2 text-sm text-zinc-400"><input type="checkbox" id="chk-separator" checked> "×" Separator</label>
         <label class="flex items-center gap-2 text-sm text-zinc-400"><input type="checkbox" id="chk-name" checked> Name</label>
         <label class="flex items-center gap-2 text-sm text-zinc-400"><input type="checkbox" id="chk-chart" checked> Line Chart & Tags</label>
-        <label class="flex items-center gap-2 text-sm text-zinc-400"><input type="checkbox" id="chk-badge" checked> Ticker Badge (100)</label>
+        <label class="flex items-center gap-2 text-sm text-zinc-400"><input type="checkbox" id="chk-badge" checked> Asset Logo</label>
         <label class="flex items-center gap-2 text-sm text-zinc-400"><input type="checkbox" id="chk-ticker" checked> Ticker Text</label>
         <label class="flex items-center gap-2 text-sm text-zinc-400"><input type="checkbox" id="chk-pnl-box" checked> PnL Box</label>
         <label class="flex items-center gap-2 text-sm text-zinc-400"><input type="checkbox" id="chk-contracts" checked> Contracts Row</label>
@@ -255,16 +265,19 @@
 
       <!-- Variable Output Block -->
       <div class="mt-auto px-6 mb-4 w-full">
+        <!-- Dynamic Logo Output -->
         <div class="flex items-center gap-3 mb-2" id="out-ticker-container">
-          <div id="out-ticker-badge" class="w-10 h-10 rounded-full bg-[#009ee3] flex items-center justify-center text-white font-bold text-[13px] tracking-normal leading-none">100</div>
-          <div class="text-[28px] font-medium leading-none" id="out-ticker" style="color: #ffffff;">NQ1!</div>
+          <img id="out-ticker-logo" src="assets/nasdaq.png" class="w-8 h-8 object-contain">
+          <div class="text-[28px] font-medium leading-none" id="out-ticker" style="color: #ffffff;">NQ</div>
         </div>
 
+        <!-- Profit Pill Output -->
         <div class="mt-5 text-[42px] leading-none font-extrabold py-2 px-2 rounded-xl inline-flex items-center justify-center mb-8 transition-colors" 
              id="out-short-pnl" style="background-color: #86D99F; color: #000000;">
           +$12.4k
         </div>
 
+        <!-- Trade Variables -->
         <div class="space-y-[18px] text-[19px] leading-none">
           <div class="flex justify-between items-center w-full" id="out-row-contracts">
             <span class="font-bold out-label" style="color: #d4d4d8;">Contracts</span>
@@ -296,37 +309,89 @@
   <script>
     const captureArea = document.getElementById('capture-area');
 
-    // --- Dynamic PnL Coloring Logic ---
+    // --- 0. ASSET DROPDOWN LOGIC ---
+    const assetsList = [
+      { id: 'NQ', name: 'Nasdaq (NQ)', img: 'assets/nasdaq.png', symbol: 'NQ=F' },
+      { id: 'ES', name: 'S&P 500 (ES)', img: 'assets/es.png', symbol: 'ES=F' },
+      { id: 'YM', name: 'Dow Jones (YM)', img: 'assets/ym.png', symbol: 'YM=F' },
+      { id: 'GC', name: 'Gold (GC)', img: 'assets/gold.png', symbol: 'GC=F' },
+      { id: 'SI', name: 'Silver (SI)', img: 'assets/silver.png', symbol: 'SI=F' },
+      { id: 'CL', name: 'Crude Oil (CL)', img: 'assets/oil.png', symbol: 'CL=F' }
+    ];
+
+    const assetBtn = document.getElementById('asset-select-btn');
+    const assetOptions = document.getElementById('asset-options');
+    let currentAssetSymbol = 'NQ=F';
+
+    assetsList.forEach(asset => {
+      const opt = document.createElement('div');
+      opt.className = "flex items-center gap-3 p-3 hover:bg-zinc-800 cursor-pointer transition-colors";
+      opt.innerHTML = `<img src="${asset.img}" class="w-5 h-5 object-contain"> <span class="text-white text-sm">${asset.name}</span>`;
+      opt.onclick = () => {
+        setAsset(asset.id);
+        assetOptions.classList.add('hidden');
+      };
+      assetOptions.appendChild(opt);
+    });
+
+    assetBtn.onclick = () => assetOptions.classList.toggle('hidden');
+    document.addEventListener('click', (e) => {
+      if (!document.getElementById('asset-dropdown-container').contains(e.target)) {
+        assetOptions.classList.add('hidden');
+      }
+    });
+
+    function setAsset(id) {
+      const asset = assetsList.find(a => a.id === id) || assetsList[0];
+      document.getElementById('asset-select-display').innerHTML = `<img src="${asset.img}" class="w-5 h-5 object-contain"> <span class="text-white font-medium">${asset.id}</span>`;
+      document.getElementById('out-ticker').textContent = asset.id;
+      document.getElementById('out-ticker-logo').src = asset.img;
+      document.getElementById('asset-select-btn').dataset.value = asset.id;
+      
+      currentAssetSymbol = asset.symbol;
+      fetchAndRenderRealChart();
+    }
+    setAsset('NQ'); // Init default
+
+    // --- 1. SMART TEXT FORMATTER ---
+    function formatMoney(val, includeSign = false, isShort = false) {
+      const num = parseFloat(String(val).replace(/[^0-9.-]+/g, ""));
+      if (isNaN(num)) return val; 
+      
+      const absVal = Math.abs(num);
+      let prefix = '$';
+      if (includeSign) {
+        if (num > 0) prefix = '+$';
+        else if (num < 0) prefix = '-$';
+        else prefix = '+$'; // Breakeven
+      }
+      
+      if (isShort) return prefix + (absVal >= 1000 ? (absVal / 1000).toFixed(1) + 'k' : absVal.toFixed(2));
+      return prefix + absVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
     function autoColorPnL() {
       const val = document.getElementById('in-short-pnl').value;
       const num = parseFloat(val.replace(/[^0-9.-]+/g, ""));
-      
       if (isNaN(num)) return;
 
-      let color = '#86D99F'; // Green Profit
-      if (num < 0) color = '#ff6b6b'; // Red Loss
-      else if (num === 0) color = '#d4d4d8'; // Gray Breakeven
+      let color = '#86D99F'; 
+      if (num < 0) color = '#ff6b6b'; 
+      else if (num === 0) color = '#d4d4d8'; 
 
       const pnlBg = document.getElementById('color-pnl-bg');
       const pnlTotal = document.getElementById('color-total');
-      
       pnlBg.value = color;
       pnlTotal.value = color;
-      
-      // Instantly trigger UI update
       pnlBg.dispatchEvent(new Event('input'));
       pnlTotal.dispatchEvent(new Event('input'));
     }
 
-    document.getElementById('in-short-pnl').addEventListener('input', autoColorPnL);
-    document.getElementById('in-total-pnl').addEventListener('input', autoColorPnL);
-
-    // --- BACKGROUND ENGINE (Defaults + Uploads + Delete Icons) ---
+    // --- 2. BACKGROUND ENGINE ---
     const bgContainer = document.getElementById('bg-selector');
     const defaultBgs = Array.from({length: 10}, (_, i) => `assets/${i+1}.jpeg`);
     let allBgs = [...defaultBgs];
 
-    // Load any custom uploaded backgrounds
     try {
       const storedBgs = localStorage.getItem('customTradeBgs');
       if (storedBgs) allBgs = [...defaultBgs, ...JSON.parse(storedBgs)];
@@ -346,35 +411,32 @@
           btn.classList.replace('border-transparent', 'border-white');
           captureArea.style.backgroundImage = `url('${bgSrc}')`;
         };
-        
         wrapper.appendChild(btn);
 
-        // Add Delete icon to every thumbnail
-        const delBtn = document.createElement('button');
-        delBtn.innerHTML = `<svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>`;
-        delBtn.className = "absolute top-0 right-0 bg-red-600/90 hover:bg-red-500 text-white w-[18px] h-[18px] flex items-center justify-center rounded-bl-md rounded-tr-md transition-colors shadow-lg z-10";
-        delBtn.onclick = (e) => {
-          e.stopPropagation();
-          allBgs.splice(index, 1);
-          saveCustomBgs();
-          renderBgGrid();
-        };
-        wrapper.appendChild(delBtn);
-
+        // Minimalist Cross Icon (No red background)
+        if (index >= 10) {
+          const delBtn = document.createElement('button');
+          delBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>`;
+          delBtn.className = "absolute top-1 right-1 text-red-500 hover:text-red-400 drop-shadow-md z-10 transition-colors";
+          delBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (confirm("Are you sure you want to delete this custom background?")) {
+              allBgs.splice(index, 1);
+              saveCustomBgs();
+              renderBgGrid();
+            }
+          };
+          wrapper.appendChild(delBtn);
+        }
         bgContainer.appendChild(wrapper);
       });
     }
 
     function saveCustomBgs() {
       const customOnly = allBgs.filter(src => !src.startsWith('assets/'));
-      try {
-        localStorage.setItem('customTradeBgs', JSON.stringify(customOnly));
-      } catch(e) {
-        alert("Browser storage limit reached. Delete some old images first.");
-      }
+      try { localStorage.setItem('customTradeBgs', JSON.stringify(customOnly)); } catch(e) {}
     }
 
-    // Upload new image to grid
     document.getElementById('upload-bg').addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (file) {
@@ -383,131 +445,55 @@
           allBgs.push(event.target.result);
           saveCustomBgs();
           renderBgGrid();
-          // Auto-click the newest one
           bgContainer.lastElementChild.querySelector('button.border-2').click();
         };
         reader.readAsDataURL(file);
       }
     });
 
-    // Reset button entirely
     document.getElementById('btn-reset-bgs').onclick = () => {
-      if(confirm('Are you sure you want to delete all your custom uploads?')) {
+      if(confirm('Delete all custom uploads and reset to defaults?')) {
         allBgs = [...defaultBgs];
         saveCustomBgs();
         renderBgGrid();
         bgContainer.firstElementChild.querySelector('button.border-2').click();
       }
     };
-
-    renderBgGrid(); // Initial paint
+    renderBgGrid();
 
     document.getElementById('in-dimmer').addEventListener('input', (e) => {
       document.getElementById('bg-overlay').style.opacity = e.target.value;
     });
 
-    // --- TRADOVATE CSV PARSER ---
-    function csvToArray(text) {
-      let p = '', row = [''], ret = [row], i = 0, r = 0, s = !0, l;
-      for (l of text) {
-        if ('"' === l) {
-          if (s && l === p) row[i] += l;
-          s = !s;
-        } else if (',' === l && s) l = row[++i] = '';
-        else if ('\n' === l && s) {
-          if ('\r' === p) row[i] = row[i].slice(0, -1);
-          row = ret[++r] = [l = '']; i = 0;
-        } else row[i] += l;
-        p = l;
-      }
-      return ret.filter(r => r.length > 1);
-    }
-
-    function formatCurrencyStrings(amount) {
-      const isPositive = amount >= 0;
-      const sign = isPositive ? '+$' : (amount < 0 ? '-$' : '$');
-      const absVal = Math.abs(amount);
-      const totalStr = sign + absVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-      const shortStr = sign + (absVal >= 1000 ? (absVal / 1000).toFixed(1) + 'k' : absVal.toFixed(2));
-      return { totalStr, shortStr };
-    }
-
-    document.getElementById('upload-csv').addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        try {
-          const rows = csvToArray(event.target.result);
-          if (rows.length < 2) throw new Error("CSV is empty or invalid.");
-
-          const headers = rows[0].map(h => h.trim().toLowerCase());
-          const findCol = (keywords) => headers.findIndex(h => keywords.some(k => h.includes(k)));
-
-          const idxSymbol = findCol(['symbol', 'contract', 'product', 'ticker']);
-          const idxQty = findCol(['qty', 'quantity', 'size', 'contracts']);
-          const idxEntryPrice = findCol(['entry price', 'open price', 'avg entry', 'buy price']);
-          const idxExitPrice = findCol(['exit price', 'close price', 'avg exit', 'sell price']);
-          const idxEntryTime = findCol(['entry time', 'open time', 'timestamp', 'date in']);
-          const idxExitTime = findCol(['exit time', 'close time', 'date out']);
-          const idxPnl = findCol(['p&l', 'pnl', 'profit', 'net']);
-
-          const data = rows[1]; 
-
-          if(idxSymbol !== -1 && data[idxSymbol]) document.getElementById('in-ticker').value = data[idxSymbol].trim();
-          if(idxQty !== -1 && data[idxQty]) document.getElementById('in-contracts').value = data[idxQty].trim();
-          if(idxEntryPrice !== -1 && data[idxEntryPrice]) document.getElementById('in-entry').value = "$" + parseFloat(data[idxEntryPrice]).toFixed(2);
-          if(idxExitPrice !== -1 && data[idxExitPrice]) document.getElementById('in-exit').value = "$" + parseFloat(data[idxExitPrice]).toFixed(2);
-
-          if(idxPnl !== -1 && data[idxPnl]) {
-            let pnlString = data[idxPnl];
-            if (data.length > headers.length && data[idxPnl + 1] && /^[0-9]+/.test(data[idxPnl + 1].trim())) {
-              pnlString += data[idxPnl + 1];
-            }
-            const rawPnl = parseFloat(pnlString.replace(/[^0-9.-]+/g, ""));
-            const { totalStr, shortStr } = formatCurrencyStrings(rawPnl);
-            document.getElementById('in-total-pnl').value = totalStr;
-            document.getElementById('in-short-pnl').value = shortStr;
-          }
-
-          if(idxEntryTime !== -1 && data[idxEntryTime]) {
-            const dateObj = new Date(data[idxEntryTime]);
-            if(!isNaN(dateObj)) {
-              document.getElementById('in-date').value = dateObj.getFullYear() + "-" + String(dateObj.getMonth() + 1).padStart(2, '0') + "-" + String(dateObj.getDate()).padStart(2, '0');
-              document.getElementById('in-entry-time').value = dateObj.toTimeString().slice(0,5);
-            }
-          }
-
-          if(idxExitTime !== -1 && data[idxExitTime]) {
-            const dateObj = new Date(data[idxExitTime]);
-            if(!isNaN(dateObj)) {
-              document.getElementById('in-exit-time').value = dateObj.toTimeString().slice(0,5);
-            }
-          }
-
-          document.querySelectorAll('input').forEach(input => input.dispatchEvent(new Event('input')));
-          fetchAndRenderRealChart();
-          
-          alert("Trade successfully imported from CSV!");
-        } catch (error) {
-          console.error("CSV Parse Error:", error);
-          alert("Failed to parse CSV. Ensure it is a valid export file.");
-        }
-      };
-      reader.readAsText(file);
-    });
-
-    // --- BINDINGS ---
+    // --- 3. BINDINGS & FORMATTERS ---
     const textDataNodes = [
       { in: 'in-name', out: 'out-name' }, { in: 'in-handle', out: 'out-handle' },
-      { in: 'in-ticker', out: 'out-ticker' }, { in: 'in-short-pnl', out: 'out-short-pnl' },
-      { in: 'in-contracts', out: 'out-contracts' }, { in: 'in-entry', out: 'out-entry' },
-      { in: 'in-exit', out: 'out-exit' }, { in: 'in-total-pnl', out: 'out-total-pnl' }
+      { in: 'in-contracts', out: 'out-contracts' }
     ];
+    
+    // Standard Strings
     textDataNodes.forEach(node => {
       document.getElementById(node.in).addEventListener('input', (e) => { document.getElementById(node.out).textContent = e.target.value; });
     });
+
+    // Smart Formatted Money Strings
+    document.getElementById('in-short-pnl').addEventListener('input', (e) => { 
+      document.getElementById('out-short-pnl').textContent = formatMoney(e.target.value, true, true);
+      autoColorPnL();
+    });
+    document.getElementById('in-total-pnl').addEventListener('input', (e) => { 
+      document.getElementById('out-total-pnl').textContent = formatMoney(e.target.value, true, false);
+      autoColorPnL();
+    });
+    document.getElementById('in-entry').addEventListener('input', (e) => { 
+      document.getElementById('out-entry').textContent = formatMoney(e.target.value, false, false);
+    });
+    document.getElementById('in-exit').addEventListener('input', (e) => { 
+      document.getElementById('out-exit').textContent = formatMoney(e.target.value, false, false);
+    });
+
+    // Run initial format on load
+    document.querySelectorAll('#in-short-pnl, #in-total-pnl, #in-entry, #in-exit').forEach(el => el.dispatchEvent(new Event('input')));
 
     const colorMaps = [
       { input: 'color-top', targetId: 'out-top-row', prop: 'color' },
@@ -527,7 +513,7 @@
     const visibilityNodes = [
       { check: 'chk-brand', target: 'out-brand' }, { check: 'chk-separator', target: 'out-separator' },
       { check: 'chk-name', target: 'out-name' }, { check: 'chk-chart', target: 'out-chart-container' },
-      { check: 'chk-badge', target: 'out-ticker-badge' }, { check: 'chk-ticker', target: 'out-ticker' },
+      { check: 'chk-badge', target: 'out-ticker-logo' }, { check: 'chk-ticker', target: 'out-ticker' },
       { check: 'chk-pnl-box', target: 'out-short-pnl' }, { check: 'chk-contracts', target: 'out-row-contracts' },
       { check: 'chk-entry', target: 'out-row-entry' }, { check: 'chk-exit', target: 'out-row-exit' },
       { check: 'chk-total', target: 'out-row-total-pnl' }, { check: 'chk-website', target: 'out-website' },
@@ -539,48 +525,122 @@
       });
     });
 
-    // --- SAVE AND LOAD STATE ---
+    // --- 4. CSV AUTO-PARSER ---
+    function csvToArray(text) {
+      let p = '', row = [''], ret = [row], i = 0, r = 0, s = !0, l;
+      for (l of text) {
+        if ('"' === l) {
+          if (s && l === p) row[i] += l;
+          s = !s;
+        } else if (',' === l && s) l = row[++i] = '';
+        else if ('\n' === l && s) {
+          if ('\r' === p) row[i] = row[i].slice(0, -1);
+          row = ret[++r] = [l = '']; i = 0;
+        } else row[i] += l;
+        p = l;
+      }
+      return ret.filter(r => r.length > 1);
+    }
+
+    document.getElementById('upload-csv').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        try {
+          const rows = csvToArray(event.target.result);
+          if (rows.length < 2) throw new Error("CSV empty");
+          const headers = rows[0].map(h => h.trim().toLowerCase());
+          const findCol = (keys) => headers.findIndex(h => keys.some(k => h.includes(k)));
+
+          const idxSymbol = findCol(['symbol', 'contract', 'ticker']);
+          const idxQty = findCol(['qty', 'size', 'contracts']);
+          const idxEntry = findCol(['entry price', 'avg entry', 'buy price']);
+          const idxExit = findCol(['exit price', 'avg exit', 'sell price']);
+          const idxEntryTime = findCol(['entry time', 'timestamp']);
+          const idxExitTime = findCol(['exit time', 'close time']);
+          const idxPnl = findCol(['p&l', 'pnl', 'profit']);
+          const data = rows[1]; 
+
+          if(idxSymbol !== -1 && data[idxSymbol]) {
+            let sym = data[idxSymbol].toUpperCase();
+            if(sym.includes('NQ')) setAsset('NQ');
+            else if(sym.includes('ES')) setAsset('ES');
+            else if(sym.includes('YM')) setAsset('YM');
+            else if(sym.includes('GC')) setAsset('GC');
+            else if(sym.includes('SI')) setAsset('SI');
+            else if(sym.includes('CL')) setAsset('CL');
+          }
+          if(idxQty !== -1 && data[idxQty]) document.getElementById('in-contracts').value = data[idxQty].trim();
+          if(idxEntry !== -1 && data[idxEntry]) document.getElementById('in-entry').value = data[idxEntry].trim();
+          if(idxExit !== -1 && data[idxExit]) document.getElementById('in-exit').value = data[idxExit].trim();
+          
+          if(idxPnl !== -1 && data[idxPnl]) {
+            let pnlStr = data[idxPnl];
+            if (data.length > headers.length && data[idxPnl + 1] && /^[0-9]+/.test(data[idxPnl + 1].trim())) {
+              pnlStr += data[idxPnl + 1]; // Heal broken commas
+            }
+            document.getElementById('in-short-pnl').value = pnlStr;
+            document.getElementById('in-total-pnl').value = pnlStr;
+          }
+          if(idxEntryTime !== -1 && data[idxEntryTime]) {
+            const d = new Date(data[idxEntryTime]);
+            if(!isNaN(d)) {
+              document.getElementById('in-date').value = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
+              document.getElementById('in-entry-time').value = d.toTimeString().slice(0,5);
+            }
+          }
+          if(idxExitTime !== -1 && data[idxExitTime]) {
+            const d = new Date(data[idxExitTime]);
+            if(!isNaN(d)) document.getElementById('in-exit-time').value = d.toTimeString().slice(0,5);
+          }
+
+          document.querySelectorAll('input').forEach(i => i.dispatchEvent(new Event('input')));
+          alert("Imported successfully!");
+        } catch (error) { alert("Failed to parse CSV."); }
+      };
+      reader.readAsText(file);
+    });
+
+    // --- 5. SAVE / LOAD SETTINGS ---
     function saveSettings() {
       const settings = {};
-      const inputs = document.querySelectorAll('input');
-      inputs.forEach(input => {
-        if (input.type === 'file' || input.id === 'upload-csv') return;
-        settings[input.id] = input.type === 'checkbox' ? input.checked : input.value;
+      document.querySelectorAll('input').forEach(inp => {
+        if (inp.type === 'file' || inp.id === 'upload-csv') return;
+        settings[inp.id] = inp.type === 'checkbox' ? inp.checked : inp.value;
       });
       settings['bg-image'] = document.getElementById('capture-area').style.backgroundImage;
+      settings['asset-select'] = document.getElementById('asset-select-btn').dataset.value || 'NQ';
       
       try {
         localStorage.setItem('tradeGeneratorSettings', JSON.stringify(settings));
-        alert('Preset saved successfully! It will automatically load next time.');
-      } catch (e) {
-        alert('Could not save settings.');
-      }
+        alert('Preset saved successfully!');
+      } catch (e) { alert('Could not save settings.'); }
     }
 
     function loadSettings() {
       const saved = localStorage.getItem('tradeGeneratorSettings');
       if (saved) {
         const settings = JSON.parse(saved);
-        const inputs = document.querySelectorAll('input');
-        inputs.forEach(input => {
-          if (input.type === 'file' || input.id === 'upload-csv') return;
-          if (settings[input.id] !== undefined) {
-            if (input.type === 'checkbox') {
-              input.checked = settings[input.id];
-              input.dispatchEvent(new Event('change'));
+        document.querySelectorAll('input').forEach(inp => {
+          if (inp.type === 'file' || inp.id === 'upload-csv') return;
+          if (settings[inp.id] !== undefined) {
+            if (inp.type === 'checkbox') {
+              inp.checked = settings[inp.id];
+              inp.dispatchEvent(new Event('change'));
             } else {
-              input.value = settings[input.id];
-              input.dispatchEvent(new Event('input'));
+              inp.value = settings[inp.id];
+              inp.dispatchEvent(new Event('input'));
             }
           }
         });
-        if (settings['bg-image']) {
-          document.getElementById('capture-area').style.backgroundImage = settings['bg-image'];
-        }
+        if (settings['bg-image']) document.getElementById('capture-area').style.backgroundImage = settings['bg-image'];
+        if (settings['asset-select']) setAsset(settings['asset-select']);
       }
     }
 
-    // --- CHART & API LOGIC ---
+    // --- 6. CHART ENGINE ---
     function drawSVGPath(svg, markerS, markerB, priceData, timestamps, isFallback = false) {
       const minPrice = Math.min(...priceData);
       const maxPrice = Math.max(...priceData);
@@ -592,11 +652,9 @@
 
       if (!isFallback && timestamps && timestamps.length > 0) {
         const dateVal = document.getElementById('in-date').value;
-        const entryTimeVal = document.getElementById('in-entry-time').value;
-        const exitTimeVal = document.getElementById('in-exit-time').value;
-        const entryUnix = Math.floor(new Date(`${dateVal}T${entryTimeVal}:00`).getTime() / 1000);
-        const exitUnix = Math.floor(new Date(`${dateVal}T${exitTimeVal}:00`).getTime() / 1000);
-
+        const entryUnix = Math.floor(new Date(`${dateVal}T${document.getElementById('in-entry-time').value}:00`).getTime() / 1000);
+        const exitUnix = Math.floor(new Date(`${dateVal}T${document.getElementById('in-exit-time').value}:00`).getTime() / 1000);
+        
         let minEntryDiff = Infinity, minExitDiff = Infinity;
         timestamps.forEach((ts, i) => {
           if (Math.abs(ts - entryUnix) < minEntryDiff) { minEntryDiff = Math.abs(ts - entryUnix); entryIndex = i; }
@@ -609,7 +667,6 @@
       }
 
       let pathString = ''; let entryCoords = { x: 0, y: 0 }; let exitCoords = { x: 0, y: 0 };
-
       priceData.forEach((price, index) => {
         const x = (index / (priceData.length - 1)) * width;
         const y = height - (((price - minPrice) / range) * height); 
@@ -627,8 +684,7 @@
       const svg = document.getElementById('price-chart');
       const markerS = document.getElementById('marker-s');
       const markerB = document.getElementById('marker-b');
-      const symbol = "NQ=F"; 
-      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1m&range=7d`;
+      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${currentAssetSymbol}?interval=1m&range=7d`;
       const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
 
       try {
@@ -653,23 +709,16 @@
         if(priceData.length === 0) throw new Error("No data for this specific date.");
         drawSVGPath(svg, markerS, markerB, priceData, dayTimestamps, false);
       } catch (error) {
-        console.warn("API Blocked or Failed. Rendering Fallback Chart.", error);
         const fallbackData = [100, 102, 101, 104, 103, 106, 105, 108, 107, 109, 112, 110, 108, 105, 101, 95, 88, 80, 70, 60, 55, 45, 35, 30, 25, 20, 15, 12, 10, 8, 12, 15, 14, 18, 16, 22, 20, 25, 24, 28];
         drawSVGPath(svg, markerS, markerB, fallbackData, null, true);
       }
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      loadSettings(); 
-      autoColorPnL(); // Make sure PnL colors match the loaded state
-      fetchAndRenderRealChart(); 
-    });
-    
+    window.addEventListener('DOMContentLoaded', () => { loadSettings(); });
     document.getElementById('in-date').addEventListener('input', fetchAndRenderRealChart);
     document.getElementById('in-entry-time').addEventListener('input', fetchAndRenderRealChart);
     document.getElementById('in-exit-time').addEventListener('input', fetchAndRenderRealChart);
 
-    // --- EXPORT ---
     function downloadImage() {
       const targetDOM = document.getElementById('capture-area');
       document.fonts.ready.then(() => {
@@ -681,10 +730,7 @@
             fileLink.href = dataUrl;
             fileLink.click();
           })
-          .catch(error => {
-            console.error('Render error:', error);
-            alert('Generation failed. Check console for details.');
-          });
+          .catch(error => { alert('Generation failed. Check console for details.'); });
       });
     }
   </script>
